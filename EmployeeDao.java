@@ -64,8 +64,7 @@ public class EmployeeDao {
 		 * You need to handle the database insertion of the employee details and return "success" or "failure" based on result of the database insertion.
 		 */
 		
-		if (employee == null) return "failure";
-		
+		if (employee != null)
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			Connection connection = DriverManager.getConnection("jdbc:");
@@ -73,11 +72,17 @@ public class EmployeeDao {
 			PreparedStatement query;
 			ResultSet results;
 			
-			// Check for existing employee.
+			// Check for existing Person
+			query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+			query.setInt(1, Integer.parseInt(employee.getSsn()));
+			results = query.executeQuery();
+			if (results.next()) return "failure";
+			
+			// Check for existing Employee
 			query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
 			query.setInt(1, Integer.parseInt(employee.getSsn()));
 			results = query.executeQuery();
-			if (results.next()) throw new Exception();
+			if (results.next()) return "failure";
 			
 			// Check for existing location, add if not exists.
 			query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
@@ -132,9 +137,70 @@ public class EmployeeDao {
 		 * You need to handle the database update and return "success" or "failure" based on result of the database update.
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (employee != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection("jdbc:");
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing Employee
+				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing location, add if not exists.
+				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+				query.setInt(1, employee.getLocation().getZipCode());
+				results = query.executeQuery();
+				if (!results.next()) {  // Add location
+					query = connection.prepareStatement("INSERT INTO Location(ZipCode, City, State) VALUES (?, ?, ?)");
+					query.setInt(1, employee.getLocation().getZipCode());
+					query.setString(2, employee.getLocation().getCity());
+					query.setString(3, employee.getLocation().getState());
+					query.executeUpdate();
+				}
+				
+				// Update Person entry
+				query = connection.prepareStatement("UPDATE Person "
+						+ "SET LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ? "
+						+ "WHERE SSN = ?");
+				query.setString(1, employee.getLastName());
+				query.setString(2, employee.getFirstName());
+				query.setString(3, employee.getAddress());
+				query.setInt(4, employee.getLocation().getZipCode());
+				query.setString(5, employee.getTelephone());
+				query.setInt(6, Integer.parseInt(employee.getSsn()));
+				query.executeUpdate();
+				
+				// Update Employee entry
+				query = connection.prepareStatement("UPDATE Employee "
+						+ "SET StartDate = ?, HourlyRate = ? "
+						+ "WHERE SSN = ?");
+				query.setString(1, employee.getStartDate());
+				query.setFloat(2, employee.getHourlyRate());
+				query.setInt(3, Integer.parseInt(employee.getSsn()));
+				query.executeUpdate();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			
+			return "failure";
 
 	}
 
