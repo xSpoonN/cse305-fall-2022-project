@@ -1,5 +1,11 @@
 package dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,9 +64,62 @@ public class EmployeeDao {
 		 * You need to handle the database insertion of the employee details and return "success" or "failure" based on result of the database insertion.
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (employee == null) return "failure";
+		
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection connection = DriverManager.getConnection("jdbc:");
+			connection.setAutoCommit(false);
+			PreparedStatement query;
+			ResultSet results;
+			
+			// Check for existing employee.
+			query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
+			query.setInt(1, Integer.parseInt(employee.getSsn()));
+			results = query.executeQuery();
+			if (results.next()) throw new Exception();
+			
+			// Check for existing location, add if not exists.
+			query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+			query.setInt(1, employee.getLocation().getZipCode());
+			results = query.executeQuery();
+			if (!results.next()) {  // Add location
+				query = connection.prepareStatement("INSERT INTO Location(ZipCode, City, State) VALUES (?, ?, ?)");
+				query.setInt(1, employee.getLocation().getZipCode());
+				query.setString(2, employee.getLocation().getCity());
+				query.setString(3, employee.getLocation().getState());
+				query.executeUpdate();
+			}
+			
+			// Add Person
+			query = connection.prepareStatement("INSERT INTO Person(SSN, LastName, FirstName, Address, ZipCode, Telephone) "
+					+ "VALUES (?, ?, ?, ?, ?, ?)");
+			query.setInt(1, Integer.parseInt(employee.getSsn()));
+			query.setString(2, employee.getLastName());
+			query.setString(3, employee.getFirstName());
+			query.setString(4, employee.getAddress());
+			query.setInt(5, employee.getLocation().getZipCode());
+			query.setString(6, employee.getTelephone());
+			query.executeUpdate();
+			
+			// Add Employee
+			query = connection.prepareStatement("INSERT INTO Employee(SSN, StartDate, HourlyRate) VALUES (?, ?, ?)");
+			query.setInt(1, Integer.parseInt(employee.getSsn()));
+			query.setString(2, employee.getStartDate());
+			query.setFloat(3, employee.getHourlyRate());
+			query.executeUpdate();
+			
+			connection.commit();
+			results.close();
+			query.close();
+			connection.close();
+			return "success";
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		
+		return "failure";
 
 	}
 
@@ -102,6 +161,8 @@ public class EmployeeDao {
 		 */
 
 		List<Employee> employees = new ArrayList<Employee>();
+		
+		
 
 		Location location = new Location();
 		location.setCity("Stony Brook");
