@@ -3,7 +3,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.cse305</groupId>
   <artifactId>Jsp</artifactId>
-  <maven.compiler.release>13</maven.compiler.release>
   <packaging>war</packaging>
   <version>0.0.1-SNAPSHOT</version>
   <name>Jsp Maven Webapp</name>
