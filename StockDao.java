@@ -94,7 +94,7 @@ public class StockDao {
 
     }
 
-	public List getStocksByCustomer(String customerId) {
+	public List<Stock> getStocksByCustomer(String customerId) {
 
 		/*
 		 * The students code to fetch data from the database will be written here
