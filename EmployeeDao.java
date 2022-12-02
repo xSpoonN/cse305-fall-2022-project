@@ -1,5 +1,11 @@
 package dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,9 +64,67 @@ public class EmployeeDao {
 		 * You need to handle the database insertion of the employee details and return "success" or "failure" based on result of the database insertion.
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (employee != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection("jdbc:");
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				results = query.executeQuery();
+				if (results.next()) return "failure";
+				
+				// Check for existing Employee
+				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				results = query.executeQuery();
+				if (results.next()) return "failure";
+				
+				// Check for existing location, add if not exists.
+				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+				query.setInt(1, employee.getLocation().getZipCode());
+				results = query.executeQuery();
+				if (!results.next()) {  // Add location
+					query = connection.prepareStatement("INSERT INTO Location(ZipCode, City, State) VALUES (?, ?, ?)");
+					query.setInt(1, employee.getLocation().getZipCode());
+					query.setString(2, employee.getLocation().getCity());
+					query.setString(3, employee.getLocation().getState());
+					query.executeUpdate();
+				}
+				
+				// Add Person
+				query = connection.prepareStatement("INSERT INTO Person(SSN, LastName, FirstName, Address, ZipCode, Telephone) "
+						+ "VALUES (?, ?, ?, ?, ?, ?)");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(2, employee.getLastName());
+				query.setString(3, employee.getFirstName());
+				query.setString(4, employee.getAddress());
+				query.setInt(5, employee.getLocation().getZipCode());
+				query.setString(6, employee.getTelephone());
+				query.executeUpdate();
+				
+				// Add Employee
+				query = connection.prepareStatement("INSERT INTO Employee(SSN, StartDate, HourlyRate) VALUES (?, ?, ?)");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(2, employee.getStartDate());
+				query.setFloat(3, employee.getHourlyRate());
+				query.executeUpdate();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+		
+		return "failure";
 
 	}
 
@@ -73,9 +137,70 @@ public class EmployeeDao {
 		 * You need to handle the database update and return "success" or "failure" based on result of the database update.
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (employee != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection("jdbc:");
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing Employee
+				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
+				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing location, add if not exists.
+				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+				query.setInt(1, employee.getLocation().getZipCode());
+				results = query.executeQuery();
+				if (!results.next()) {  // Add location
+					query = connection.prepareStatement("INSERT INTO Location(ZipCode, City, State) VALUES (?, ?, ?)");
+					query.setInt(1, employee.getLocation().getZipCode());
+					query.setString(2, employee.getLocation().getCity());
+					query.setString(3, employee.getLocation().getState());
+					query.executeUpdate();
+				}
+				
+				// Update Person entry
+				query = connection.prepareStatement("UPDATE Person "
+						+ "SET LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ? "
+						+ "WHERE SSN = ?");
+				query.setString(1, employee.getLastName());
+				query.setString(2, employee.getFirstName());
+				query.setString(3, employee.getAddress());
+				query.setInt(4, employee.getLocation().getZipCode());
+				query.setString(5, employee.getTelephone());
+				query.setInt(6, Integer.parseInt(employee.getSsn()));
+				query.executeUpdate();
+				
+				// Update Employee entry
+				query = connection.prepareStatement("UPDATE Employee "
+						+ "SET StartDate = ?, HourlyRate = ? "
+						+ "WHERE SSN = ?");
+				query.setString(1, employee.getStartDate());
+				query.setFloat(2, employee.getHourlyRate());
+				query.setInt(3, Integer.parseInt(employee.getSsn()));
+				query.executeUpdate();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			
+			return "failure";
 
 	}
 
@@ -86,9 +211,36 @@ public class EmployeeDao {
 		 * You need to handle the database deletion and return "success" or "failure" based on result of the database deletion.
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (employeeID != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection("jdbc:");
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Employee
+				query = connection.prepareStatement("SELECT Id FROM Employee WHERE Id = ?");
+				query.setInt(1, Integer.parseInt(employeeID));
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Delete Employee
+				query = connection.prepareStatement("DELETE FROM Employee WHERE Id = ?");
+				query.setInt(1, Integer.parseInt(employeeID));
+				query.executeUpdate();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+		
+		return "failure";
 
 	}
 
@@ -102,27 +254,29 @@ public class EmployeeDao {
 		 */
 
 		List<Employee> employees = new ArrayList<Employee>();
-
-		Location location = new Location();
-		location.setCity("Stony Brook");
-		location.setState("NY");
-		location.setZipCode(11790);
-
-		/*Sample data begins*/
-		for (int i = 0; i < 10; i++) {
-			Employee employee = new Employee();
-			employee.setId("111-11-1111");
-			employee.setEmail("shiyong@cs.sunysb.edu");
-			employee.setFirstName("Shiyong");
-			employee.setLastName("Lu");
-			employee.setAddress("123 Success Street");
-			employee.setLocation(location);
-			employee.setTelephone("5166328959");
-			employee.setEmployeeID("631-413-5555");
-			employee.setHourlyRate(100);
-			employees.add(employee);
+		
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection connection = DriverManager.getConnection("jdbc:");
+			connection.setAutoCommit(false);
+			PreparedStatement query;
+			ResultSet results;
+			
+			// Loop through all Employees and add them to the List
+			query = connection.prepareStatement("SELECT * FROM Employee");
+			results = query.executeQuery();
+			while (results.next()) {
+				Employee employee = getEmployee(String.valueOf(results.getInt("SSN")));
+				if (employee != null) employees.add(employee);
+			}
+			
+			results.close();
+			query.close();
+			connection.close();
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
 		}
-		/*Sample data ends*/
 		
 		return employees;
 	}
