@@ -145,6 +145,7 @@ public class StockDao {
         List<String> types = new ArrayList<String>();
         types.add("technology");
         types.add("finance");
+        types.add("human");
         return types;
 
     }
