@@ -22,7 +22,11 @@ public class LoginDao {
 		Login login = new Login();
 		login.setRole(role);
 		return login;
-		/*Sample data ends*/
+		/*Sample data ends*/            
+
+
+
+		
 		
 	}
 	
