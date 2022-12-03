@@ -18,7 +18,7 @@ public class EmployeeDao {
 	 * This class handles all the database operations related to the employee table
 	 */
 	
-	private String dmConn = "jdbc:";
+	private String dmConn = "jdbc:mysql://localhost:3306/";
 
     public Employee getDummyEmployee()
     {
@@ -351,6 +351,26 @@ public class EmployeeDao {
 		 * The record is required to be encapsulated as a "Employee" class object
 		 */
 		
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection connection = DriverManager.getConnection(dmConn);
+			connection.setAutoCommit(false);
+			PreparedStatement query;
+			ResultSet results;
+			
+			// Query imported from ManagerTransactions (HW2)
+			query = connection.prepareStatement("GO "
+					+ "CREATE VIEW EmployeeEarnings AS "
+					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
+					+ "WHERE Trade.BrokerId = Employee.Id AND Trade.TransactionId = Transactions.Id "
+					+ "GROUP BY Employee.SSN");
+			
+			// Todo: finish this
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		
 		return getDummyEmployee();
 	}
 
@@ -360,6 +380,35 @@ public class EmployeeDao {
 		 * username, which is the Employee's email address who's Employee ID has to be fetched, is given as method parameter
 		 * The Employee ID is required to be returned as a String
 		 */
+		
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection connection = DriverManager.getConnection(dmConn);
+			connection.setAutoCommit(false);
+			PreparedStatement query;
+			ResultSet results;
+			
+			// Get Person with matching Email
+			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
+			query.setString(1, username);
+			results = query.executeQuery();
+			if (!results.next()) return null;
+			
+			// Get Employee with matching SSN
+			query = connection.prepareStatement("SELECT Id FROM Employee WHERE SSN = ?");
+			query.setString(1, results.getString("SSN"));
+			results = query.executeQuery();
+			if (!results.next()) return null;
+			String id = results.getString("Id");
+			
+			results.close();
+			query.close();
+			connection.close();
+			return id;
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
 
 		return "111-11-1111";
 	}
