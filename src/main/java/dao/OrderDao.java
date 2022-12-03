@@ -9,32 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 public class OrderDao {
-
-    public Order getDummyTrailingStopOrder() {
-        TrailingStopOrder order = new TrailingStopOrder();
-        order.setId(1); order.setDatetime(new Date()); order.setNumShares(5); order.setPercentage(12.0); return order;
-    }
-    public Order getDummyMarketOrder() {
-        MarketOrder order = new MarketOrder();
-        order.setId(1); order.setDatetime(new Date()); order.setNumShares(5); order.setBuySellType("buy"); return order;
-    }
-    public Order getDummyMarketOnCloseOrder() {
-        MarketOnCloseOrder order = new MarketOnCloseOrder();
-        order.setId(1); order.setDatetime(new Date()); order.setNumShares(5); order.setBuySellType("buy"); return order;
-    }
-    public Order getDummyHiddenStopOrder() {
-        HiddenStopOrder order = new HiddenStopOrder();
-        order.setId(1); order.setDatetime(new Date()); order.setNumShares(5); order.setPricePerShare(145.0); return order;
-    }
-    public List<Order> getDummyOrders() {
-        List<Order> orders = new ArrayList<Order>();
-        for (int i = 0; i < 3; i++) { orders.add(getDummyTrailingStopOrder()); }
-        for (int i = 0; i < 3; i++) { orders.add(getDummyMarketOrder()); }
-        for (int i = 0; i < 3; i++) { orders.add(getDummyMarketOnCloseOrder()); }
-        for (int i = 0; i < 3; i++) { orders.add(getDummyHiddenStopOrder()); }
-        return orders;
-    }
-
     public String submitOrder(Order order, Customer customer, Employee employee, Stock stock) {
 		/* Student code to place stock order. Employee can be null, when the order is placed directly by Customer */
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null;
@@ -42,7 +16,7 @@ public class OrderDao {
         String time = formatted.format(date); String symbol = stock.getSymbol(); int accnum = customer.getAccountNumber();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(""); //Placeholder
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             int shares = order.getNumShares(); double price = stock.getPrice(); double fee = 0.05*shares*price;
             if (order instanceof MarketOrder || order instanceof MarketOnCloseOrder) {
@@ -153,7 +127,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(""); //Placeholder
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this symbol */
             ps = conn.prepareStatement("SELECT Orders.* FROM Trade,Orders WHERE StockId = ? AND Trade.OrderId = Orders.Id");
@@ -202,7 +176,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(""); //Placeholder
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this name */
             ps = conn.prepareStatement(
@@ -254,14 +228,14 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(""); //Placeholder
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* Get the customer's accountid */
             ps = conn.prepareStatement("SELECT Id FROM Account WHERE Client = ?");
             ps.setInt(1, Integer.parseInt(customerId));
             rs = ps.executeQuery(); rs.next(); int accid = rs.getInt("Id"); ps.close(); rs.close();
             ps = conn.prepareStatement(
-                "SELECT O.DateTime, T.StockId, O.OrderType, O.NumShares, O.PricePerShare, O.PriceType, O.Percentage, T.BrokerId, T.TransactionId FROM Orders O, Trade T" +
+                "SELECT O.DateTime, T.StockId, O.OrderType, O.NumShares, O.PricePerShare, O.PriceType, O.Percentage, T.BrokerId, T.TransactionId FROM Orders O, Trade T " +
                 "WHERE O.Id = T.OrderId AND T.AccountId = ?");
             ps.setInt(1, accid); rs = ps.executeQuery();
             while (rs.next()) {
@@ -302,7 +276,6 @@ public class OrderDao {
         return out;
     }
 
-
     public List<OrderPriceEntry> getOrderPriceHistory(String orderId) {
         /* The students code to query to view price history of hidden stop order or trailing stop order */
         List<OrderPriceEntry> orderPriceHistory = new ArrayList<OrderPriceEntry>();
@@ -310,10 +283,10 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(""); //Placeholder
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
-                "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime, Orders.* FROM Trade T, Transactions Tr, Orders" +
+                "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime, Orders.* FROM Trade T, Transactions Tr, Orders " +
                 "WHERE T.OrderId = ? AND Orders.Id = T.OrderId");
             ps.setInt(1, Integer.parseInt(orderId)); rs = ps.executeQuery();
             while (rs.next()) {
