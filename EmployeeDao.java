@@ -17,6 +17,8 @@ public class EmployeeDao {
 	/*
 	 * This class handles all the database operations related to the employee table
 	 */
+	
+	private String dmConn = "jdbc:";
 
     public Employee getDummyEmployee()
     {
@@ -67,20 +69,20 @@ public class EmployeeDao {
 		if (employee != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection("jdbc:");
+				Connection connection = DriverManager.getConnection(dmConn);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
 				
 				// Check for existing Person
 				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
-				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (results.next()) return "failure";
 				
 				// Check for existing Employee
 				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
-				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (results.next()) return "failure";
 				
@@ -99,7 +101,7 @@ public class EmployeeDao {
 				// Add Person
 				query = connection.prepareStatement("INSERT INTO Person(SSN, LastName, FirstName, Address, ZipCode, Telephone) "
 						+ "VALUES (?, ?, ?, ?, ?, ?)");
-				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(1, employee.getSsn());
 				query.setString(2, employee.getLastName());
 				query.setString(3, employee.getFirstName());
 				query.setString(4, employee.getAddress());
@@ -109,7 +111,7 @@ public class EmployeeDao {
 				
 				// Add Employee
 				query = connection.prepareStatement("INSERT INTO Employee(SSN, StartDate, HourlyRate) VALUES (?, ?, ?)");
-				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(1, employee.getSsn());
 				query.setString(2, employee.getStartDate());
 				query.setFloat(3, employee.getHourlyRate());
 				query.executeUpdate();
@@ -140,20 +142,20 @@ public class EmployeeDao {
 		if (employee != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection("jdbc:");
+				Connection connection = DriverManager.getConnection(dmConn);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
 				
 				// Check for existing Person
 				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
-				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
 				
 				// Check for existing Employee
 				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
-				query.setInt(1, Integer.parseInt(employee.getSsn()));
+				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
 				
@@ -178,7 +180,7 @@ public class EmployeeDao {
 				query.setString(3, employee.getAddress());
 				query.setInt(4, employee.getLocation().getZipCode());
 				query.setString(5, employee.getTelephone());
-				query.setInt(6, Integer.parseInt(employee.getSsn()));
+				query.setString(6, employee.getSsn());
 				query.executeUpdate();
 				
 				// Update Employee entry
@@ -187,7 +189,7 @@ public class EmployeeDao {
 						+ "WHERE SSN = ?");
 				query.setString(1, employee.getStartDate());
 				query.setFloat(2, employee.getHourlyRate());
-				query.setInt(3, Integer.parseInt(employee.getSsn()));
+				query.setString(3, employee.getSsn());
 				query.executeUpdate();
 				
 				connection.commit();
@@ -214,7 +216,7 @@ public class EmployeeDao {
 		if (employeeID != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection("jdbc:");
+				Connection connection = DriverManager.getConnection(dmConn);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
@@ -257,7 +259,7 @@ public class EmployeeDao {
 		
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection connection = DriverManager.getConnection("jdbc:");
+			Connection connection = DriverManager.getConnection(dmConn);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
 			ResultSet results;
@@ -266,7 +268,7 @@ public class EmployeeDao {
 			query = connection.prepareStatement("SELECT * FROM Employee");
 			results = query.executeQuery();
 			while (results.next()) {
-				Employee employee = getEmployee(String.valueOf(results.getInt("SSN")));
+				Employee employee = getEmployee(String.valueOf(results.getInt("Id")));
 				if (employee != null) employees.add(employee);
 			}
 			
@@ -291,7 +293,7 @@ public class EmployeeDao {
 		
 		try {
 			Class.forName("com.mysql.jdcb.Driver");
-			Connection connection = DriverManager.getConnection("jdbc:");
+			Connection connection = DriverManager.getConnection(dmConn);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
 			ResultSet results;
