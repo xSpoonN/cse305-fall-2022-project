@@ -33,4 +33,3 @@ Location:
 Login:
 	String Username (Key)
 	String Password
-	String Role
