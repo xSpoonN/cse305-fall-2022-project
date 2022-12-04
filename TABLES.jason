@@ -30,3 +30,7 @@ Location:
 	String City
 	String State
 	
+Login:
+	String Username (Key)
+	String Password
+	String Role
