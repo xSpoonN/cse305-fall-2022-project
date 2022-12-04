@@ -16,7 +16,7 @@ public class OrderDao {
         String time = formatted.format(date); String symbol = stock.getSymbol(); int accnum = customer.getAccountNumber();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             int shares = order.getNumShares(); double price = stock.getPrice(); double fee = 0.05*shares*price;
             if (order instanceof MarketOrder || order instanceof MarketOnCloseOrder) {
@@ -127,7 +127,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this symbol */
             ps = conn.prepareStatement("SELECT Orders.* FROM Trade,Orders WHERE StockId = ? AND Trade.OrderId = Orders.Id");
@@ -176,7 +176,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this name */
             ps = conn.prepareStatement(
@@ -228,7 +228,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* Get the customer's accountid */
             ps = conn.prepareStatement("SELECT Id FROM Account WHERE Client = ?");
@@ -283,7 +283,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
                 "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime, Orders.* FROM Trade T, Transactions Tr, Orders " +
