@@ -279,12 +279,13 @@ public class StockDao {
             ps.execute(); ps.close();
             ps = conn.prepareStatement(
 						"SELECT * " +
-						"FROM Stock WHERE Stock.Type = @TopStock; " +
-						"DROP VIEW CustomerStockTypes ");
-			rs = ps.executeQuery();
+						"FROM Stock WHERE Stock.Type = @TopStock");
+            rs = ps.executeQuery(); ps.close();
             while (rs.next()) {
                 out.add(getStockBySymbol(rs.getString("StockSymbol")));
             }
+            ps = conn.prepareStatement("DROP VIEW CustomerStockTypes");
+            ps.execute();
             conn.commit();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
