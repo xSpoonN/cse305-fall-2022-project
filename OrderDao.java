@@ -29,7 +29,7 @@ public class OrderDao {
                 ps.setString(5,priceType); ps.setString(6, orderType);
                 ps.executeUpdate(); ps.close();
                 /* Adds to table Transaction */
-                ps = conn.prepareStatement("INSERT INTO Transaction VALUES (?, ?, ?);");
+                ps = conn.prepareStatement("INSERT INTO Transactions(Fee,DateTime,PricePerShare) VALUES (?, ?, ?);");
                 ps.setDouble(1, fee); ps.setString(2,time); ps.setDouble(3,price);
                 ps.executeUpdate(); ps.close();
                 /* Gets Id of just added Order and Transaction */
@@ -40,7 +40,7 @@ public class OrderDao {
                 ps.setString(1, time); ps.setDouble(2, fee); ps.setDouble(3, price);
                 rs = ps.executeQuery(); rs.next(); int transid = rs.getInt("Id"); ps.close(); rs.close();
                 /* Adds to table Trade */
-                ps = conn.prepareStatement("INSERT INTO Trade VALUES (?,?,?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
                 if (employee == null) ps.setNull(2, java.sql.Types.INTEGER);
                 else ps.setInt(2, Integer.parseInt(employee.getEmployeeID()));
@@ -86,7 +86,7 @@ public class OrderDao {
                 }
                 ps.executeUpdate(); ps.close();
                 /* Insert into Transactions */
-                ps = conn.prepareStatement("INSERT INTO Transactions VALUES (?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Transactions(Fee,DateTime,PricePerShare) VALUES (?,?,?);");
                 ps.setDouble(1,fee); ps.setString(2, time); ps.setDouble(3,price);
                 ps.executeUpdate(); ps.close();
                 /* Gets Id of just added Order and Transaction */
@@ -97,7 +97,7 @@ public class OrderDao {
                 ps.setString(1, time); ps.setDouble(2, fee); ps.setDouble(3, price);
                 rs = ps.executeQuery(); rs.next(); int transid = rs.getInt("Id"); ps.close(); rs.close();
                 /* Adds to table Trade */
-                ps = conn.prepareStatement("INSERT INTO Trade VALUES (?,?,?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
                 if (employee == null) ps.setNull(2, java.sql.Types.INTEGER);
                 else ps.setInt(2, Integer.parseInt(employee.getEmployeeID()));
