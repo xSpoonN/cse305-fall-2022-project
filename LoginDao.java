@@ -12,7 +12,9 @@ public class LoginDao {
 	 * This class handles all the database operations related to login functionality
 	 */
 	
-	private String dmConn = "jdbc:mysql://localhost:3306/";
+	protected static final String dmConn = "jdbc:mysql://localhost:3306/CSE305";
+	protected static final String dmUser = "";
+	protected static final String dmPass = "";
 	
 	public Login login(String username, String password, String role) {
 		/*
@@ -27,7 +29,7 @@ public class LoginDao {
 		if (username != null && password != null && role != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
@@ -68,7 +70,7 @@ public class LoginDao {
 		if (login != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
