@@ -22,7 +22,7 @@ public class OrderDao {
             if (order instanceof MarketOrder || order instanceof MarketOnCloseOrder) {
                 String priceType, orderType;
                 /* Adds to table Order */
-                ps = conn.prepareStatement("INSERT INTO Orders VALUES (?, ?, ?, ?, ?, ?);");
+                ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?, ?, ?, ?, ?, ?);");
                 ps.setInt(1, shares); ps.setDouble(2,price); ps.setString(3, time); ps.setDouble(4,0.0);
                 if (order instanceof MarketOrder) { priceType = "Market"; orderType = ((MarketOrder)order).getBuySellType();
                 } else { priceType = "MarketOnClose"; orderType = ((MarketOnCloseOrder)order).getBuySellType(); }
@@ -75,7 +75,7 @@ public class OrderDao {
                 rs = ps.executeQuery(); rs.next(); int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
                 if (amtowned < shares) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
                 /* Insert into Orders */
-                ps = conn.prepareStatement("INSERT INTO Orders VALUES (?,?,?,?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?,?,?,?,?,?);");
                 ps.setInt(1, shares); ps.setString(3,time); ps.setString(6, "Sell");
                 if (order instanceof TrailingStopOrder) {
                     ps.setNull(2, java.sql.Types.DECIMAL);
