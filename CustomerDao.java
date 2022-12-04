@@ -14,8 +14,6 @@ public class CustomerDao {
 	/*
 	 * This class handles all the database operations related to the customer table
 	 */
-	
-	private String dmConn = "jdbc:mysql://localhost:3306/";
 
     public Customer getDummyCustomer() {
         Location location = new Location();
@@ -67,7 +65,7 @@ public class CustomerDao {
 		
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
@@ -103,7 +101,7 @@ public class CustomerDao {
 
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(dmConn);
+			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
 			ResultSet results;
@@ -149,7 +147,7 @@ public class CustomerDao {
 		if (customerID != null)
 			try {
 				Class.forName("com.mysql.jdcb.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
@@ -221,7 +219,7 @@ public class CustomerDao {
 		if (customerID != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
@@ -262,7 +260,7 @@ public class CustomerDao {
 
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(dmConn);
+			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
 			ResultSet results;
@@ -305,7 +303,7 @@ public class CustomerDao {
 		if (customer != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
@@ -392,7 +390,7 @@ public class CustomerDao {
 		if (customer != null)
 			try {
 				Class.forName("com.mysql.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn);
+				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
 				ResultSet results;
