@@ -283,28 +283,139 @@ public class StockDao {
 
     public List<Stock> getStockSuggestions(String customerID) {
 		/* The students code to return stock suggestions for given "customerId" */
-
-        return getDummyStocks();
+        Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
+            ps = conn.prepareStatement( "GO " +
+						"CREATE VIEW CustomerStockTypes AS " +
+						"SELECT COUNT(Stock.Type) AS NumOrders, Stock.Type " +
+						"FROM Trade,Orders,Account,Client,Person,Stock " +
+						"WHERE Client.Id = ? AND Trade.StockId = Stock.StockSymbol " +
+						"	AND Person.SSN = Client.Id AND Client.Id = Account.Client AND Account.Id = Trade.AccountId AND Trade.OrderId = Orders.Id " +
+						"GROUP BY Stock.Type " +
+						"GO " +
+						"DECLARE @TopStock CHAR(20) " +
+						"SET @TopStock = ( " +
+						"	SELECT TOP 3 CustomerStockTypes.Type FROM CustomerStockTypes " +
+						"	WHERE CustomerStockTypes.NumOrders = ( " +
+						"		SELECT MAX(CustomerStockTypes.NumOrders) FROM CustomerStockTypes )) " +
+						"SELECT * " +
+						"FROM Stock WHERE Stock.Type = @TopStock " +
+						"DROP VIEW CustomerStockTypes ");
+			ps.setString(1, customerID); rs = ps.executeQuery();
+            while (rs.next()) {
+                out.add(getStockBySymbol(rs.getString("StockSymbol")));
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (conn != null) conn.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (conn != null) conn.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (ps != null) ps.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (rs != null) rs.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
+        return out;
     }
 
     public List<Stock> getStockPriceHistory(String stockSymbol) {
 		/* The students code to return list of stock objects, showing price history */
-
-        return getDummyStocks();
+        Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
+            ps = conn.prepareStatement( "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime" + 
+										"FROM Trade T, Transactions Tr WHERE T.StockId = ?");
+			ps.setString(1, stockSymbol); rs = ps.executeQuery();
+            while (rs.next()) {
+				Stock stock = new Stock();
+				stock.setSymbol(stockSymbol); stock.setPrice(rs.getDouble("PricePerShare"));
+                out.add(stock);
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (conn != null) conn.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (conn != null) conn.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (ps != null) ps.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (rs != null) rs.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
+        return out;
     }
 
     public List<String> getStockTypes() {
 		/* The students code to populate types with stock types */
-
         List<String> types = new ArrayList<String>();
-        types.add("technology");
-        types.add("finance");
+        Connection conn = null; PreparedStatement ps = null; ResultSet rs = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
+			ps = conn.prepareStatement("SELECT Type FROM Stock");
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				if (!types.contains(rs.getString("Type"))) types.add(rs.getString("Type"));
+			}
+			conn.commit();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (conn != null) conn.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (conn != null) conn.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (ps != null) ps.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (rs != null) rs.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
         return types;
     }
 
     public List<Stock> getStockByType(String stockType) {
 		/* The students code to return list of stocks of type "stockType" */
-
-        return getDummyStocks();
+        Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
+            ps = conn.prepareStatement("SELECT * FROM Stock WHERE Type = ?");
+			ps.setString(1, stockType); rs = ps.executeQuery();
+            while (rs.next()) {
+				Stock stock = new Stock();
+				stock.setSymbol(rs.getString("StockSymbol")); stock.setPrice(rs.getDouble("PricePerShare"));
+				stock.setName(rs.getString("CompanyName")); stock.setType(stockType);
+                out.add(stock);
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (conn != null) conn.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (conn != null) conn.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (ps != null) ps.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (rs != null) rs.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
+        return out;
     }
 }
