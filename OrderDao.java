@@ -42,8 +42,8 @@ public class OrderDao {
                 /* Adds to table Trade */
                 ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
-                if (employee == null) ps.setNull(2, java.sql.Types.INTEGER);
-                else ps.setInt(2, Integer.parseInt(employee.getEmployeeID()));
+                if (employee == null) /* ps.setNull(2, java.sql.Types.INTEGER); */ ps.setString(2, " ");
+                else ps.setString(2, employee.getEmployeeID());
                 ps.executeUpdate(); ps.close();
                 /* See if the entry exists in the account */
                 ps = conn.prepareStatement("SELECT COUNT(*) AS amount FROM HasStock WHERE StockId = ? AND AccountId = ?");
@@ -99,7 +99,7 @@ public class OrderDao {
                 /* Adds to table Trade */
                 ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
-                if (employee == null) ps.setNull(2, java.sql.Types.INTEGER);
+                if (employee == null) /* ps.setNull(2, java.sql.Types.INTEGER); */ ps.setString(2, " ");
                 else ps.setInt(2, Integer.parseInt(employee.getEmployeeID()));
                 ps.executeUpdate(); ps.close();
                 conn.commit(); rs.close(); conn.close();
