@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Customer;
+import model.Employee;
 import model.Location;
 
 import java.util.stream.IntStream;
@@ -62,7 +63,34 @@ public class CustomerDao {
 		 * Each record is required to be encapsulated as a "Customer" class object and added to the "customers" List
 		 */
 		
-		return getDummyCustomerList();
+    	List<Customer> customers = new ArrayList<Customer>();
+		
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Loop through all Clients and add them to the List
+				query = connection.prepareStatement("SELECT * FROM Client");
+				results = query.executeQuery();
+				while (results.next()) {
+					Customer customer = getCustomer(results.getString("ID"));
+					if (customer != null && 
+							(searchKeyword == null || customer.getLastName().contains(searchKeyword) || customer.getFirstName().contains(searchKeyword))) 
+						customers.add(customer);
+				}
+				
+				results.close();
+				query.close();
+				connection.close();
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			
+		return customers;
 	}
 
 
@@ -73,6 +101,26 @@ public class CustomerDao {
 		 * The customer record is required to be encapsulated as a "Customer" class object
 		 */
 
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection connection = DriverManager.getConnection(dmConn);
+			connection.setAutoCommit(false);
+			PreparedStatement query;
+			ResultSet results;
+			
+			// Query imported from ManagerTransactions (HW2)
+			query = connection.prepareStatement("GO "
+					+ "CREATE VIEW EmployeeEarnings AS "
+					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
+					+ "WHERE Trade.BrokerId = Employee.Id AND Trade.TransactionId = Transactions.Id "
+					+ "GROUP BY Employee.SSN");
+			
+			// Todo: finish this
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		
 		return getDummyCustomer();
 	}
 
@@ -85,7 +133,68 @@ public class CustomerDao {
 		 * The customer record is required to be encapsulated as a "Customer" class object
 		 */
 		
-		return getDummyCustomer();
+		if (customerID != null)
+			try {
+				Class.forName("com.mysql.jdcb.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Get the Client with associated ID
+				Customer customer = new Customer();
+				customer.setClientId(customerID);
+				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
+				query.setString(1, customerID);
+				results = query.executeQuery();
+				if (!results.next()) return null;
+				customer.setSsn(results.getString("SSN"));
+				customer.setRating(results.getInt("Rating"));
+				customer.setCreditCard(results.getString("CreditCardNumber"));
+				
+				// Get the Account with associated ClientID
+				query = connection.prepareStatement("SELECT * FROM Account WHERE ClientID = ?");
+				query.setString(1, customer.getClientId());
+				results = query.executeQuery();
+				if (!results.next()) return null;
+				customer.setAccountNumber(results.getInt("AccountNumber"));
+				customer.setAccountCreationTime("DateOpened");
+				
+				// Get the Person with associated SSN
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
+				query.setString(1, customer.getSsn());
+				results = query.executeQuery();
+				if (!results.next()) return null;
+				customer.setId(results.getString("ID"));
+				customer.setLastName(results.getString("LastName"));
+				customer.setFirstName(results.getString("FirstName"));
+				customer.setAddress(results.getString("Address"));
+				customer.setTelephone(results.getString("Telephone"));
+				customer.setEmail(results.getString("Email"));
+				
+				// Get the Location with associated ZipCode
+				Location location = new Location();
+				location.setZipCode(results.getInt("ZipCode"));
+				query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
+				query.setInt(1, location.getZipCode());
+				results = query.executeQuery();
+				if (results.next()) {
+					location.setCity(results.getString("City"));
+					location.setState(results.getString("State"));
+				}
+				customer.setLocation(location);
+				
+				results.close();
+				query.close();
+				connection.close();
+				
+				return customer;
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+
+		return null;
 	}
 	
 	public String deleteCustomer(String customerID) {
@@ -104,13 +213,13 @@ public class CustomerDao {
 				PreparedStatement query;
 				ResultSet results;
 				
-				// Check for existing Employee
+				// Check for existing Client
 				query = connection.prepareStatement("SELECT ID FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
 				
-				// Delete Employee
+				// Delete Client
 				query = connection.prepareStatement("DELETE FROM Client WHERE Id = ?");
 				query.setString(1, customerID);
 				query.executeUpdate();
@@ -138,7 +247,36 @@ public class CustomerDao {
 		 * The Customer's ID is required to be returned as a String
 		 */
 
-		return "111-11-1111";
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection connection = DriverManager.getConnection(dmConn);
+			connection.setAutoCommit(false);
+			PreparedStatement query;
+			ResultSet results;
+			
+			// Get Person with matching Email
+			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
+			query.setString(1, email);
+			results = query.executeQuery();
+			if (!results.next()) return null;
+			
+			// Get Client with matching SSN
+			query = connection.prepareStatement("SELECT ID FROM Client WHERE SSN = ?");
+			query.setString(1, results.getString("SSN"));
+			results = query.executeQuery();
+			if (!results.next()) return null;
+			String id = results.getString("ID");
+			
+			results.close();
+			query.close();
+			connection.close();
+			return id;
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+
+		return null;
 	}
 
 
@@ -329,13 +467,14 @@ public class CustomerDao {
 		 * The students code to fetch data from the database will be written here
 		 */
 
-        return getDummyCustomerList();
+        return getAllCustomers();
     }
 
     public List<Customer> getAllCustomers() {
         /*
 		 * This method fetches returns all customers
 		 */
-        return getDummyCustomerList();
+    	
+    	return getCustomers(null);
     }
 }

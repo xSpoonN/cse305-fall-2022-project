@@ -297,57 +297,58 @@ public class EmployeeDao {
 		 * The record is required to be encapsulated as a "Employee" class object
 		 */
 		
-		try {
-			Class.forName("com.mysql.jdcb.Driver");
-			Connection connection = DriverManager.getConnection(dmConn);
-			connection.setAutoCommit(false);
-			PreparedStatement query;
-			ResultSet results;
-			
-			// Get the Employee with associated ID
-			Employee employee = new Employee();
-			employee.setEmployeeID(employeeID);
-			query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
-			query.setString(1, employeeID);
-			results = query.executeQuery();
-			if (!results.next()) return null;
-			employee.setSsn(results.getString("SSN"));
-			employee.setStartDate(results.getString("StartDate"));
-			employee.setHourlyRate(results.getFloat("HourlyRate"));
-			
-			// Get the Person with associated SSN
-			query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
-			query.setString(1, employee.getSsn());
-			results = query.executeQuery();
-			if (!results.next()) return null;
-			employee.setId(results.getString("ID"));
-			employee.setLastName(results.getString("LastName"));
-			employee.setFirstName(results.getString("FirstName"));
-			employee.setAddress(results.getString("Address"));
-			employee.setTelephone(results.getString("Telephone"));
-			employee.setEmail(results.getString("Email"));
-			
-			// Get the Location with associated ZipCode
-			Location location = new Location();
-			location.setZipCode(results.getInt("ZipCode"));
-			query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
-			query.setInt(1, location.getZipCode());
-			results = query.executeQuery();
-			if (results.next()) {
-				location.setCity(results.getString("City"));
-				location.setState(results.getString("State"));
+		if (employeeID != null)
+			try {
+				Class.forName("com.mysql.jdcb.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Get the Employee with associated ID
+				Employee employee = new Employee();
+				employee.setEmployeeID(employeeID);
+				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
+				query.setString(1, employeeID);
+				results = query.executeQuery();
+				if (!results.next()) return null;
+				employee.setSsn(results.getString("SSN"));
+				employee.setStartDate(results.getString("StartDate"));
+				employee.setHourlyRate(results.getFloat("HourlyRate"));
+				
+				// Get the Person with associated SSN
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
+				query.setString(1, employee.getSsn());
+				results = query.executeQuery();
+				if (!results.next()) return null;
+				employee.setId(results.getString("ID"));
+				employee.setLastName(results.getString("LastName"));
+				employee.setFirstName(results.getString("FirstName"));
+				employee.setAddress(results.getString("Address"));
+				employee.setTelephone(results.getString("Telephone"));
+				employee.setEmail(results.getString("Email"));
+				
+				// Get the Location with associated ZipCode
+				Location location = new Location();
+				location.setZipCode(results.getInt("ZipCode"));
+				query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
+				query.setInt(1, location.getZipCode());
+				results = query.executeQuery();
+				if (results.next()) {
+					location.setCity(results.getString("City"));
+					location.setState(results.getString("State"));
+				}
+				employee.setLocation(location);
+				
+				results.close();
+				query.close();
+				connection.close();
+				
+				return employee;
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
 			}
-			employee.setLocation(location);
-			
-			results.close();
-			query.close();
-			connection.close();
-			
-			return employee;
-			
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
 
 		return null;
 	}
