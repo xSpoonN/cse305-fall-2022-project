@@ -1,4 +1,5 @@
 Person:
+	String ID
 	String SSN (Key)
 	String LastName
 	String FirstName
@@ -22,7 +23,7 @@ Client:
 	String SSN (Person)
 	Int Rating
 	String CreditCardNumber
-	
+		
 Location:
 	Int ZipCode (Key)
 	String City
