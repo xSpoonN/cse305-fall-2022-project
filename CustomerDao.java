@@ -13,6 +13,8 @@ public class CustomerDao {
 	/*
 	 * This class handles all the database operations related to the customer table
 	 */
+	
+	private String dmConn = "jdbc:mysql://localhost:3306/";
 
     public Customer getDummyCustomer() {
         Location location = new Location();
@@ -94,9 +96,36 @@ public class CustomerDao {
 		 * customerID, which is the Customer's ID who's details have to be deleted, is given as method parameter
 		 */
 
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (customerID != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Employee
+				query = connection.prepareStatement("SELECT ID FROM Client WHERE ID = ?");
+				query.setString(1, customerID);
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Delete Employee
+				query = connection.prepareStatement("DELETE FROM Client WHERE Id = ?");
+				query.setString(1, customerID);
+				query.executeUpdate();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+		
+		return "failure";
 		
 	}
 
@@ -122,11 +151,82 @@ public class CustomerDao {
 		 * The sample code returns "success" by default.
 		 * You need to handle the database insertion of the customer details and return "success" or "failure" based on result of the database insertion.
 		 */
+		if (customer != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
+				query.setString(1, customer.getSsn());
+				results = query.executeQuery();
+				if (results.next()) return "failure";
+				
+				// Check for existing Customer
+				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
+				query.setString(1, customer.getSsn());
+				results = query.executeQuery();
+				if (results.next()) return "failure";
+				
+				// Check for existing Account
+				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
+				query.setInt(1, customer.getAccountNumber());
+				results = query.executeQuery();
+				if (results.next()) return "failure";
+				
+				// Check for existing location, add if not exists.
+				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+				query.setInt(1, customer.getLocation().getZipCode());
+				results = query.executeQuery();
+				if (!results.next()) {  // Add location
+					query = connection.prepareStatement("INSERT INTO Location(ZipCode, City, State) VALUES (?, ?, ?)");
+					query.setInt(1, customer.getLocation().getZipCode());
+					query.setString(2, customer.getLocation().getCity());
+					query.setString(3, customer.getLocation().getState());
+					query.executeUpdate();
+				}
+				
+				// Add Person
+				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
+				query.setString(1, customer.getId());
+				query.setString(2, customer.getSsn());
+				query.setString(3, customer.getLastName());
+				query.setString(4, customer.getFirstName());
+				query.setString(5, customer.getAddress());
+				query.setInt(6, customer.getLocation().getZipCode());
+				query.setString(7, customer.getTelephone());
+				query.executeUpdate();
+				
+				// Add Client
+				query = connection.prepareStatement("INSERT INTO Client(ID, SSN, Rating, CreditCardNumber) VALUES (?, ?, ?, ?)");
+				query.setString(1, customer.getClientId());
+				query.setString(2, customer.getSsn());
+				query.setInt(3, customer.getRating());
+				query.setString(4, customer.getCreditCard());
+				query.executeUpdate();
+				
+				// Add Account
+				query = connection.prepareStatement("INSERT INTO Account(AccountNumber, ClientID, DateOpened) VALUES (?, ?, ?)");
+				query.setInt(1, customer.getAccountNumber());
+				query.setString(1, customer.getClientId());
+				query.setString(2, customer.getAccountCreationTime());
+				query.executeUpdate();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
-
+		return "failure";
 	}
 
 	public String editCustomer(Customer customer) {
@@ -138,9 +238,87 @@ public class CustomerDao {
 		 * You need to handle the database update and return "success" or "failure" based on result of the database update.
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (customer != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+				query.setString(1, customer.getSsn());
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing Customer
+				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
+				query.setString(1, customer.getSsn());
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing Account
+				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
+				query.setInt(1, customer.getAccountNumber());
+				results = query.executeQuery();
+				if (!results.next()) return "failure";
+				
+				// Check for existing location, add if not exists.
+				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+				query.setInt(1, customer.getLocation().getZipCode());
+				results = query.executeQuery();
+				if (!results.next()) {  // Add location
+					query = connection.prepareStatement("INSERT INTO Location(ZipCode, City, State) VALUES (?, ?, ?)");
+					query.setInt(1, customer.getLocation().getZipCode());
+					query.setString(2, customer.getLocation().getCity());
+					query.setString(3, customer.getLocation().getState());
+					query.executeUpdate();
+				}
+				
+				// Update Person entry
+				query = connection.prepareStatement("UPDATE Person "
+						+ "SET ID = ?, LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ?, Email = ? "
+						+ "WHERE SSN = ?");
+				query.setString(1, customer.getId());
+				query.setString(2, customer.getLastName());
+				query.setString(3, customer.getFirstName());
+				query.setString(4, customer.getAddress());
+				query.setInt(5, customer.getLocation().getZipCode());
+				query.setString(6, customer.getTelephone());
+				query.setString(7, customer.getSsn());
+				query.setString(8, customer.getEmail());
+				query.executeUpdate();
+				
+				// Update Employee entry
+				query = connection.prepareStatement("UPDATE Client "
+						+ "SET ID = ?, Rating = ?, CreditCardNumber = ? "
+						+ "WHERE SSN = ?");
+				query.setString(1, customer.getClientId());
+				query.setInt(2, customer.getRating());
+				query.setString(3, customer.getCreditCard());
+				query.setString(4, customer.getSsn());
+				query.executeUpdate();
+				
+				// Update Account entry
+				query = connection.prepareStatement("UPDATE Account "
+						+ "SET AccountNumber = ?, DateOpened = ? "
+						+ "WHERE ClientID = ?");
+				query.setInt(1, customer.getAccountNumber());
+				query.setString(2, customer.getAccountCreationTime());
+				query.setString(3, customer.getClientId());
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				return "success";
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			
+			return "failure";
 
 	}
 
