@@ -5,10 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Customer;
-import model.Employee;
 import model.Location;
-
-import java.util.stream.IntStream;
 
 public class CustomerDao {
 	/*
