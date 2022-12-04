@@ -1,0 +1,32 @@
+Person:
+	String ID
+	String SSN (Key)
+	String LastName
+	String FirstName
+	String Address
+	Int ZipCode (Location)
+	String Telephone
+	String Email
+	
+Employee:
+	String ID (Key)
+	String SSN (Person)
+	String StartDate
+	Float HourlyRate
+
+Client:
+	String ID (Key)
+	String SSN (Person)
+	Int Rating
+	String CreditCardNumber
+	
+Account:
+	Int AccountNumber (Key)
+	String ClientID (Client)
+	String DateOpened
+		
+Location:
+	Int ZipCode (Key)
+	String City
+	String State
+	
