@@ -372,15 +372,28 @@ public class EmployeeDao {
 					+ "CREATE VIEW EmployeeEarnings AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
 					+ "WHERE Trade.BrokerId = Employee.Id AND Trade.TransactionId = Transactions.Id "
-					+ "GROUP BY Employee.SSN");
+					+ "GROUP BY Employee.SSN "
+					+ "GO "
+					+ "SELECT Employee.ID "
+					+ "FROM EmployeeEarnings AS z, Person, Employee "
+					+ "WHERE Person.SSN = Employee.SSN AND Employee.SSN = z.SSN AND z.Total = ("
+					+ "SELECT MAX(x.Total) FROM EmployeeEarnings AS x) "
+					+ "DROP VIEW EmployeeEarnings");
+			results = query.executeQuery();
+			if (!results.next()) return null;
+			Employee employee = getEmployee(results.getString("ID"));
 			
-			// Todo: finish this
+			results.close();
+			query.close();
+			connection.close();
+			
+			return employee;
 			
 		} catch (Exception exception) {
 			exception.printStackTrace();
 		}
 		
-		return getDummyEmployee();
+		return null;
 	}
 
 	public String getEmployeeID(String username) {
