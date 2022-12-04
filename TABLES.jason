@@ -13,16 +13,17 @@ Employee:
 	String SSN (Person)
 	String StartDate
 	Float HourlyRate
-	
-Account:
-	String ID (Key)
-	String SSN (Person)
-	String DateOpened
 
 Client:
+	String ID (Key)
 	String SSN (Person)
 	Int Rating
 	String CreditCardNumber
+	
+Account:
+	Int AccountNumber (Key)
+	String ClientID (Client)
+	String DateOpened
 		
 Location:
 	Int ZipCode (Key)
