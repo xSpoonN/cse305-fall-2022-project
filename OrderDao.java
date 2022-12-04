@@ -79,7 +79,8 @@ public class OrderDao {
                 /* Check that the account has enough inventory */
                 ps = conn.prepareStatement("SELECT * FROM HasStock WHERE AccountId = ? AND StockSymbol = ?"); 
                 ps.setInt(1, accnum); ps.setString(2, symbol);
-                rs = ps.executeQuery(); rs.next(); int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
+                rs = ps.executeQuery(); if (!rs.next()) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
+                int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
                 if (amtowned < shares) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
                 /* Insert into Orders */
                 ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?,?,?,?,?,?);");
@@ -125,7 +126,7 @@ public class OrderDao {
             try { if (rs != null) rs.close();
             } catch (Exception ee) { System.out.println(ee.getMessage()); }
         }
-        return "fail";
+        return "failure";
     }
 
     public List<Order> getOrderByStockSymbol(String stockSymbol) {
@@ -301,7 +302,7 @@ public class OrderDao {
             ps.setInt(1, Integer.parseInt(orderId)); rs = ps.executeQuery();
             while (rs.next()) {
                 OrderPriceEntry order = new OrderPriceEntry(); 
-                order.setDate(formatted.parse(rs.getString("DateTime"))); order.setOrderId(orderId); 
+                order.setDate(formatted.parse(rs.getString("Tr.DateTime"))); order.setOrderId(orderId); 
                 order.setPricePerShare(rs.getDouble("PricePerShare")); order.setStockSymbol(rs.getString("StockSymbol"));
                 orderPriceHistory.add(order);
             }
