@@ -46,7 +46,7 @@ public class StockDao {
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT * FROM Stock"); rs = ps.executeQuery();
             while (rs.next()) {
-                out.add(getStockBySymbol(rs.getString("StockId")));
+                out.add(getStockBySymbol(rs.getString("StockSymbol")));
             }
             conn.commit();
         } catch (SQLException e) {
@@ -137,7 +137,7 @@ public class StockDao {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
-            ps = conn.prepareStatement("SELECT TOP 5 StockId, COUNT(StockId) AS NumOrders FROM Trade GROUP BY StockId ORDER BY NumOrders DESC");
+            ps = conn.prepareStatement("SELECT StockId, COUNT(StockId) AS NumOrders FROM Trade GROUP BY StockId ORDER BY NumOrders DESC LIMIT 5");
             rs = ps.executeQuery();
             while (rs.next()) {
                 out.add(getStockBySymbol(rs.getString("StockId")));
@@ -167,9 +167,9 @@ public class StockDao {
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
-				"SELECT TOP 5 StockId, COUNT(StockId) AS NumOrders FROM Trade, Account, Client " +
+				"SELECT StockId, COUNT(StockId) AS NumOrders FROM Trade, Account, Client " +
 				"WHERE Trade.AccountId = Account.Id AND Account.Client = Client.Id AND Client.Id = ? " +
-				"GROUP BY StockId ORDER BY NumOrders DESC");
+				"GROUP BY StockId ORDER BY NumOrders DESC LIMIT 5");
 			ps.setInt(1, Integer.parseInt(customerID)); rs = ps.executeQuery();
             while (rs.next()) {
                 out.add(getStockBySymbol(rs.getString("StockId")));
@@ -264,21 +264,21 @@ public class StockDao {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
-            ps = conn.prepareStatement( "GO " +
+            ps = conn.prepareStatement(
 						"CREATE VIEW CustomerStockTypes AS " +
 						"SELECT COUNT(Stock.Type) AS NumOrders, Stock.Type " +
 						"FROM Trade,Orders,Account,Client,Person,Stock " +
 						"WHERE Client.Id = ? AND Trade.StockId = Stock.StockSymbol " +
 						"	AND Person.SSN = Client.Id AND Client.Id = Account.Client AND Account.Id = Trade.AccountId AND Trade.OrderId = Orders.Id " +
 						"GROUP BY Stock.Type " +
-						"GO " +
+						";" +
 						"DECLARE @TopStock CHAR(20) " +
 						"SET @TopStock = ( " +
 						"	SELECT TOP 3 CustomerStockTypes.Type FROM CustomerStockTypes " +
 						"	WHERE CustomerStockTypes.NumOrders = ( " +
 						"		SELECT MAX(CustomerStockTypes.NumOrders) FROM CustomerStockTypes )) " +
 						"SELECT * " +
-						"FROM Stock WHERE Stock.Type = @TopStock " +
+						"FROM Stock WHERE Stock.Type = @TopStock; " +
 						"DROP VIEW CustomerStockTypes ");
 			ps.setString(1, customerID); rs = ps.executeQuery();
             while (rs.next()) {
