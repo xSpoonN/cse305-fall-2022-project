@@ -13,7 +13,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT TOP 10 StockId, COUNT(StockId) AS NumOrders FROM Trade GROUP BY StockId ORDER BY NumOrders DESC");
             rs = ps.executeQuery();
@@ -42,7 +42,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT * FROM Stock"); rs = ps.executeQuery();
             while (rs.next()) {
@@ -70,7 +70,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; Stock out = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT * FROM Stock WHERE StockSymbol = ?"); 
 			ps.setString(1, stockSymbol); rs = ps.executeQuery(); rs.next();
@@ -100,7 +100,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* Check that the symbol exists */
             ps = conn.prepareStatement("SELECT StockSymbol FROM Stock WHERE StockSymbol = ?");
@@ -135,7 +135,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT TOP 5 StockId, COUNT(StockId) AS NumOrders FROM Trade GROUP BY StockId ORDER BY NumOrders DESC");
             rs = ps.executeQuery();
@@ -164,7 +164,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
 				"SELECT TOP 5 StockId, COUNT(StockId) AS NumOrders FROM Trade, Account, Client " +
@@ -196,7 +196,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
 				"SELECT Stock.*, HasStock.NumShares FROM HasStock,Stock,Account " + 
@@ -230,7 +230,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT * FROM Stock WHERE CompanyName = ?");
 			ps.setString(1, name); rs = ps.executeQuery();
@@ -262,7 +262,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement( "GO " +
 						"CREATE VIEW CustomerStockTypes AS " +
@@ -306,7 +306,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement( "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime" + 
 										"FROM Trade T, Transactions Tr WHERE T.StockId = ?");
@@ -339,7 +339,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
 			ps = conn.prepareStatement("SELECT Type FROM Stock");
 			rs = ps.executeQuery();
@@ -368,7 +368,7 @@ public class StockDao {
         Connection conn = null; PreparedStatement ps = null; ResultSet rs = null; List<Stock> out = new ArrayList<Stock>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement("SELECT * FROM Stock WHERE Type = ?");
 			ps.setString(1, stockType); rs = ps.executeQuery();
