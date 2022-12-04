@@ -12,9 +12,9 @@ public class LoginDao {
 	 * This class handles all the database operations related to login functionality
 	 */
 	
-	protected static final String dmConn = "jdbc:mysql://localhost:3306/CSE305";
-	protected static final String dmUser = "";
-	protected static final String dmPass = "";
+	protected static final String dmConn = "jdbc:mysql://mysql3.cs.stonybrook.edu:3306/jalleonardi";
+	protected static final String dmUser = "jalleonardi";
+	protected static final String dmPass = "113332225";
 	
 	public Login login(String username, String password, String role) {
 		/*
@@ -28,7 +28,7 @@ public class LoginDao {
 		
 		if (username != null && password != null && role != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -69,7 +69,7 @@ public class LoginDao {
 		
 		if (login != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -85,7 +85,7 @@ public class LoginDao {
 				query = connection.prepareStatement("INSERT INTO Login VALUES (?, ?)");
 				query.setString(1, login.getUsername());
 				query.setString(2, login.getPassword());
-				query.executeQuery();
+				query.executeUpdate();
 				
 				connection.commit();
 				results.close();

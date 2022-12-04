@@ -14,7 +14,7 @@ public class SalesDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
                 "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares FROM Transaction T, Trade, Orders " +
@@ -51,7 +51,7 @@ public class SalesDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect","root","cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* Search keyword as stocksymbol */
             ps = conn.prepareStatement("SELECT StockSymbol FROM Stock WHERE StockSymbol = ?");

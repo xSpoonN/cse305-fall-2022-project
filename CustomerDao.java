@@ -5,10 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Customer;
-import model.Employee;
 import model.Location;
-
-import java.util.stream.IntStream;
 
 public class CustomerDao {
 	/*
@@ -64,7 +61,7 @@ public class CustomerDao {
     	List<Customer> customers = new ArrayList<Customer>();
 		
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -74,10 +71,12 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Client");
 				results = query.executeQuery();
 				while (results.next()) {
-					Customer customer = getCustomer(results.getString("ID"));
+					System.out.println("found guy");
+					Customer customer = getCustomer(results.getString("SSN"));
 					if (customer != null && 
-							(searchKeyword == null || customer.getLastName().contains(searchKeyword) || customer.getFirstName().contains(searchKeyword))) 
+							(searchKeyword == null || (customer.getFirstName() + " " + customer.getLastName()).equals(searchKeyword) || customer.getLastName().contains(searchKeyword) || customer.getFirstName().contains(searchKeyword))) 
 						customers.add(customer);
+					else System.out.println(customer == null);
 				}
 				
 				results.close();
@@ -100,23 +99,23 @@ public class CustomerDao {
 		 */
 
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
 			ResultSet results;
 			
 			// Query imported from ManagerTransactions (HW2)
-			query = connection.prepareStatement("GO "
+			query = connection.prepareStatement(""
 					+ "CREATE VIEW CustomerRevenue AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Trade.AccountId FROM Trade, Transactions "
 					+ "WHERE Trade.TransactionId = Transactions.Id "
-					+ "GROUP BY Trade.AccountId "
-					+ "GO "
+					+ "GROUP BY Trade.AccountId;"
+					+ ""
 					+ "SELECT Client.ID "
 					+ "FROM CustomerRevenue AS z, Person, Client, Account "
 					+ "WHERE Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND z.AccountId = Account.ClientID AND z.Total = ("
-					+ "SELECT MAX(x.Total) FROM CustomerRevenue AS x) "
+					+ "SELECT MAX(x.Total) FROM CustomerRevenue AS x);"
 					+ "DROP VIEW CustomerRevenue");
 			results = query.executeQuery();
 			if (!results.next()) return null;
@@ -146,7 +145,7 @@ public class CustomerDao {
 		
 		if (customerID != null)
 			try {
-				Class.forName("com.mysql.jdcb.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -155,7 +154,7 @@ public class CustomerDao {
 				// Get the Client with associated ID
 				Customer customer = new Customer();
 				customer.setClientId(customerID);
-				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
+				query = connection.prepareStatement("SELECT * FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
 				if (!results.next()) return null;
@@ -165,7 +164,7 @@ public class CustomerDao {
 				
 				// Get the Account with associated ClientID
 				query = connection.prepareStatement("SELECT * FROM Account WHERE ClientID = ?");
-				query.setString(1, customer.getClientId());
+				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return null;
 				customer.setAccountNumber(results.getInt("AccountNumber"));
@@ -218,7 +217,7 @@ public class CustomerDao {
 
 		if (customerID != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -231,7 +230,7 @@ public class CustomerDao {
 				if (!results.next()) return "failure";
 				
 				// Delete Client
-				query = connection.prepareStatement("DELETE FROM Client WHERE Id = ?");
+				query = connection.prepareStatement("DELETE FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				query.executeUpdate();
 				
@@ -259,7 +258,7 @@ public class CustomerDao {
 		 */
 
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
@@ -302,7 +301,8 @@ public class CustomerDao {
 		 */
 		if (customer != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				System.out.println(String.format("ID: %s, SSN: %s, CustomerID: %s", customer.getId(), customer.getSsn(), customer.getClientId()));
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -312,19 +312,28 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (results.next()) return "failure";
+				if (results.next()) {
+					System.out.println("daodaodaodaodaodaodao");
+					return "failure";
+				}
 				
 				// Check for existing Customer
 				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (results.next()) return "failure";
+				if (results.next()) {
+					System.out.println("i crave death");
+					return "failure";
+				}
 				
 				// Check for existing Account
 				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
 				query.setInt(1, customer.getAccountNumber());
 				results = query.executeQuery();
-				if (results.next()) return "failure";
+				if (results.next()) {
+					System.out.println("Scott Smolka");
+					return "failure";
+				}
 				
 				// Check for existing location, add if not exists.
 				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
@@ -339,20 +348,21 @@ public class CustomerDao {
 				}
 				
 				// Add Person
-				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone) "
-						+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
-				query.setString(1, customer.getId());
+				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone, Email) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+				query.setString(1, customer.getSsn());
 				query.setString(2, customer.getSsn());
 				query.setString(3, customer.getLastName());
 				query.setString(4, customer.getFirstName());
 				query.setString(5, customer.getAddress());
 				query.setInt(6, customer.getLocation().getZipCode());
 				query.setString(7, customer.getTelephone());
+				query.setString(8, customer.getEmail());
 				query.executeUpdate();
 				
 				// Add Client
 				query = connection.prepareStatement("INSERT INTO Client(ID, SSN, Rating, CreditCardNumber) VALUES (?, ?, ?, ?)");
-				query.setString(1, customer.getClientId());
+				query.setString(1, customer.getSsn());
 				query.setString(2, customer.getSsn());
 				query.setInt(3, customer.getRating());
 				query.setString(4, customer.getCreditCard());
@@ -361,8 +371,8 @@ public class CustomerDao {
 				// Add Account
 				query = connection.prepareStatement("INSERT INTO Account(AccountNumber, ClientID, DateOpened) VALUES (?, ?, ?)");
 				query.setInt(1, customer.getAccountNumber());
-				query.setString(1, customer.getClientId());
-				query.setString(2, customer.getAccountCreationTime());
+				query.setString(2, customer.getSsn());
+				query.setString(3, customer.getAccountCreationTime());
 				query.executeUpdate();
 				
 				connection.commit();
@@ -375,6 +385,7 @@ public class CustomerDao {
 				exception.printStackTrace();
 			}
 		
+		System.out.println("no.");
 		return "failure";
 	}
 
@@ -389,7 +400,7 @@ public class CustomerDao {
 		
 		if (customer != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -429,7 +440,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("UPDATE Person "
 						+ "SET ID = ?, LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ?, Email = ? "
 						+ "WHERE SSN = ?");
-				query.setString(1, customer.getId());
+				query.setString(1, customer.getSsn());
 				query.setString(2, customer.getLastName());
 				query.setString(3, customer.getFirstName());
 				query.setString(4, customer.getAddress());
@@ -443,7 +454,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("UPDATE Client "
 						+ "SET ID = ?, Rating = ?, CreditCardNumber = ? "
 						+ "WHERE SSN = ?");
-				query.setString(1, customer.getClientId());
+				query.setString(1, customer.getSsn());
 				query.setInt(2, customer.getRating());
 				query.setString(3, customer.getCreditCard());
 				query.setString(4, customer.getSsn());
@@ -455,7 +466,7 @@ public class CustomerDao {
 						+ "WHERE ClientID = ?");
 				query.setInt(1, customer.getAccountNumber());
 				query.setString(2, customer.getAccountCreationTime());
-				query.setString(3, customer.getClientId());
+				query.setString(3, customer.getSsn());
 				
 				connection.commit();
 				results.close();

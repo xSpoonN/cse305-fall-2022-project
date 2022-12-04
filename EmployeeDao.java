@@ -4,12 +4,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import model.Customer;
 import model.Employee;
 import model.Location;
 
@@ -66,7 +63,8 @@ public class EmployeeDao {
 		
 		if (employee != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				System.out.println(String.format("ID: %s, SSN: %s, EmployeeID: %s", employee.getId(), employee.getSsn(), employee.getEmployeeID()));
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -99,7 +97,7 @@ public class EmployeeDao {
 				// Add Person
 				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone, Email) "
 						+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-				query.setString(1, employee.getId());
+				query.setString(1, employee.getSsn());
 				query.setString(2, employee.getSsn());
 				query.setString(3, employee.getLastName());
 				query.setString(4, employee.getFirstName());
@@ -111,7 +109,7 @@ public class EmployeeDao {
 				
 				// Add Employee
 				query = connection.prepareStatement("INSERT INTO Employee(ID, SSN, StartDate, HourlyRate) VALUES (?, ?, ?, ?)");
-				query.setString(1, employee.getEmployeeID());
+				query.setString(1, employee.getSsn());
 				query.setString(2, employee.getSsn());
 				query.setString(3, employee.getStartDate());
 				query.setFloat(4, employee.getHourlyRate());
@@ -142,7 +140,7 @@ public class EmployeeDao {
 		
 		if (employee != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -176,7 +174,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("UPDATE Person "
 						+ "SET ID = ?, LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ?, Email = ? "
 						+ "WHERE SSN = ?");
-				query.setString(1, employee.getId());
+				query.setString(1, employee.getSsn());
 				query.setString(2, employee.getLastName());
 				query.setString(3, employee.getFirstName());
 				query.setString(4, employee.getAddress());
@@ -190,7 +188,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("UPDATE Employee "
 						+ "SET ID = ?, StartDate = ?, HourlyRate = ? "
 						+ "WHERE SSN = ?");
-				query.setString(1, employee.getEmployeeID());
+				query.setString(1, employee.getSsn());
 				query.setString(2, employee.getStartDate());
 				query.setFloat(3, employee.getHourlyRate());
 				query.setString(4, employee.getSsn());
@@ -219,7 +217,7 @@ public class EmployeeDao {
 		
 		if (employeeID != null)
 			try {
-				Class.forName("com.mysql.jdbc.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -262,7 +260,7 @@ public class EmployeeDao {
 		List<Employee> employees = new ArrayList<Employee>();
 		
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
@@ -297,7 +295,7 @@ public class EmployeeDao {
 		
 		if (employeeID != null)
 			try {
-				Class.forName("com.mysql.jdcb.Driver");
+				Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				PreparedStatement query;
@@ -359,23 +357,23 @@ public class EmployeeDao {
 		 */
 		
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;
 			ResultSet results;
 			
 			// Query imported from ManagerTransactions (HW2)
-			query = connection.prepareStatement("GO "
+			query = connection.prepareStatement(""
 					+ "CREATE VIEW EmployeeEarnings AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
 					+ "WHERE Trade.BrokerId = Employee.Id AND Trade.TransactionId = Transactions.Id "
-					+ "GROUP BY Employee.SSN "
-					+ "GO "
+					+ "GROUP BY Employee.SSN;"
+					+ ""
 					+ "SELECT Employee.ID "
 					+ "FROM EmployeeEarnings AS z, Person, Employee "
 					+ "WHERE Person.SSN = Employee.SSN AND Employee.SSN = z.SSN AND z.Total = ("
-					+ "SELECT MAX(x.Total) FROM EmployeeEarnings AS x) "
+					+ "SELECT MAX(x.Total) FROM EmployeeEarnings AS x);"
 					+ "DROP VIEW EmployeeEarnings");
 			results = query.executeQuery();
 			if (!results.next()) return null;
@@ -402,7 +400,7 @@ public class EmployeeDao {
 		 */
 		
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			PreparedStatement query;

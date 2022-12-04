@@ -16,20 +16,20 @@ public class OrderDao {
         String time = formatted.format(date); String symbol = stock.getSymbol(); int accnum = customer.getAccountNumber();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             int shares = order.getNumShares(); double price = stock.getPrice(); double fee = 0.05*shares*price;
             if (order instanceof MarketOrder || order instanceof MarketOnCloseOrder) {
                 String priceType, orderType;
                 /* Adds to table Order */
-                ps = conn.prepareStatement("INSERT INTO Orders VALUES (?, ?, ?, ?, ?, ?);");
+                ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?, ?, ?, ?, ?, ?);");
                 ps.setInt(1, shares); ps.setDouble(2,price); ps.setString(3, time); ps.setDouble(4,0.0);
                 if (order instanceof MarketOrder) { priceType = "Market"; orderType = ((MarketOrder)order).getBuySellType();
                 } else { priceType = "MarketOnClose"; orderType = ((MarketOnCloseOrder)order).getBuySellType(); }
                 ps.setString(5,priceType); ps.setString(6, orderType);
                 ps.executeUpdate(); ps.close();
                 /* Adds to table Transaction */
-                ps = conn.prepareStatement("INSERT INTO Transaction VALUES (?, ?, ?);");
+                ps = conn.prepareStatement("INSERT INTO Transactions(Fee,DateTime,PricePerShare) VALUES (?, ?, ?);");
                 ps.setDouble(1, fee); ps.setString(2,time); ps.setDouble(3,price);
                 ps.executeUpdate(); ps.close();
                 /* Gets Id of just added Order and Transaction */
@@ -40,10 +40,10 @@ public class OrderDao {
                 ps.setString(1, time); ps.setDouble(2, fee); ps.setDouble(3, price);
                 rs = ps.executeQuery(); rs.next(); int transid = rs.getInt("Id"); ps.close(); rs.close();
                 /* Adds to table Trade */
-                ps = conn.prepareStatement("INSERT INTO Trade VALUES (?,?,?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
-                if (employee == null) ps.setNull(2, java.sql.Types.INTEGER);
-                else ps.setInt(2, Integer.parseInt(employee.getEmployeeID()));
+                if (employee == null) /* ps.setNull(2, java.sql.Types.INTEGER); */ ps.setString(2, " ");
+                else ps.setString(2, employee.getEmployeeID());
                 ps.executeUpdate(); ps.close();
                 /* See if the entry exists in the account */
                 ps = conn.prepareStatement("SELECT COUNT(*) AS amount FROM HasStock WHERE StockId = ? AND AccountId = ?");
@@ -75,7 +75,7 @@ public class OrderDao {
                 rs = ps.executeQuery(); rs.next(); int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
                 if (amtowned < shares) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
                 /* Insert into Orders */
-                ps = conn.prepareStatement("INSERT INTO Orders VALUES (?,?,?,?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?,?,?,?,?,?);");
                 ps.setInt(1, shares); ps.setString(3,time); ps.setString(6, "Sell");
                 if (order instanceof TrailingStopOrder) {
                     ps.setNull(2, java.sql.Types.DECIMAL);
@@ -86,7 +86,7 @@ public class OrderDao {
                 }
                 ps.executeUpdate(); ps.close();
                 /* Insert into Transactions */
-                ps = conn.prepareStatement("INSERT INTO Transactions VALUES (?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Transactions(Fee,DateTime,PricePerShare) VALUES (?,?,?);");
                 ps.setDouble(1,fee); ps.setString(2, time); ps.setDouble(3,price);
                 ps.executeUpdate(); ps.close();
                 /* Gets Id of just added Order and Transaction */
@@ -97,9 +97,9 @@ public class OrderDao {
                 ps.setString(1, time); ps.setDouble(2, fee); ps.setDouble(3, price);
                 rs = ps.executeQuery(); rs.next(); int transid = rs.getInt("Id"); ps.close(); rs.close();
                 /* Adds to table Trade */
-                ps = conn.prepareStatement("INSERT INTO Trade VALUES (?,?,?,?,?);");
+                ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
-                if (employee == null) ps.setNull(2, java.sql.Types.INTEGER);
+                if (employee == null) /* ps.setNull(2, java.sql.Types.INTEGER); */ ps.setString(2, " ");
                 else ps.setInt(2, Integer.parseInt(employee.getEmployeeID()));
                 ps.executeUpdate(); ps.close();
                 conn.commit(); rs.close(); conn.close();
@@ -127,7 +127,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this symbol */
             ps = conn.prepareStatement("SELECT Orders.* FROM Trade,Orders WHERE StockId = ? AND Trade.OrderId = Orders.Id");
@@ -176,7 +176,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this name */
             ps = conn.prepareStatement(
@@ -228,7 +228,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* Get the customer's accountid */
             ps = conn.prepareStatement("SELECT Id FROM Account WHERE Client = ?");
@@ -283,7 +283,7 @@ public class OrderDao {
         SimpleDateFormat formatted = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/TheStockEffect", "root", "cse305");
+            conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
                 "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime, Orders.* FROM Trade T, Transactions Tr, Orders " +
