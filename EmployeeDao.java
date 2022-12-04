@@ -75,19 +75,19 @@ public class EmployeeDao {
 				ResultSet results;
 				
 				// Check for existing Person
-				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (results.next()) return "failure";
 				
 				// Check for existing Employee
-				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
+				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (results.next()) return "failure";
 				
 				// Check for existing location, add if not exists.
-				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
+				query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
 				query.setInt(1, employee.getLocation().getZipCode());
 				results = query.executeQuery();
 				if (!results.next()) {  // Add location
@@ -99,21 +99,24 @@ public class EmployeeDao {
 				}
 				
 				// Add Person
-				query = connection.prepareStatement("INSERT INTO Person(SSN, LastName, FirstName, Address, ZipCode, Telephone) "
-						+ "VALUES (?, ?, ?, ?, ?, ?)");
-				query.setString(1, employee.getSsn());
-				query.setString(2, employee.getLastName());
-				query.setString(3, employee.getFirstName());
-				query.setString(4, employee.getAddress());
-				query.setInt(5, employee.getLocation().getZipCode());
-				query.setString(6, employee.getTelephone());
+				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone, Email) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+				query.setString(1, employee.getId());
+				query.setString(2, employee.getSsn());
+				query.setString(3, employee.getLastName());
+				query.setString(4, employee.getFirstName());
+				query.setString(5, employee.getAddress());
+				query.setInt(6, employee.getLocation().getZipCode());
+				query.setString(7, employee.getTelephone());
+				query.setString(8, employee.getEmail());
 				query.executeUpdate();
 				
 				// Add Employee
-				query = connection.prepareStatement("INSERT INTO Employee(SSN, StartDate, HourlyRate) VALUES (?, ?, ?)");
-				query.setString(1, employee.getSsn());
-				query.setString(2, employee.getStartDate());
-				query.setFloat(3, employee.getHourlyRate());
+				query = connection.prepareStatement("INSERT INTO Employee(ID, SSN, StartDate, HourlyRate) VALUES (?, ?, ?, ?)");
+				query.setString(1, employee.getEmployeeID());
+				query.setString(2, employee.getSsn());
+				query.setString(3, employee.getStartDate());
+				query.setFloat(4, employee.getHourlyRate());
 				query.executeUpdate();
 				
 				connection.commit();
@@ -148,13 +151,13 @@ public class EmployeeDao {
 				ResultSet results;
 				
 				// Check for existing Person
-				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
 				
 				// Check for existing Employee
-				query = connection.prepareStatement("SELECT SSN FROM Employee WHERE SSN = ?");
+				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
@@ -173,23 +176,26 @@ public class EmployeeDao {
 				
 				// Update Person entry
 				query = connection.prepareStatement("UPDATE Person "
-						+ "SET LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ? "
+						+ "SET ID = ?, LastName = ?, FirstName = ?, Address = ?, ZipCode = ?, Telephone = ?, Email = ? "
 						+ "WHERE SSN = ?");
-				query.setString(1, employee.getLastName());
-				query.setString(2, employee.getFirstName());
-				query.setString(3, employee.getAddress());
-				query.setInt(4, employee.getLocation().getZipCode());
-				query.setString(5, employee.getTelephone());
-				query.setString(6, employee.getSsn());
+				query.setString(1, employee.getId());
+				query.setString(2, employee.getLastName());
+				query.setString(3, employee.getFirstName());
+				query.setString(4, employee.getAddress());
+				query.setInt(5, employee.getLocation().getZipCode());
+				query.setString(6, employee.getTelephone());
+				query.setString(7, employee.getSsn());
+				query.setString(8, employee.getEmail());
 				query.executeUpdate();
 				
 				// Update Employee entry
 				query = connection.prepareStatement("UPDATE Employee "
-						+ "SET StartDate = ?, HourlyRate = ? "
+						+ "SET ID = ?, StartDate = ?, HourlyRate = ? "
 						+ "WHERE SSN = ?");
-				query.setString(1, employee.getStartDate());
-				query.setFloat(2, employee.getHourlyRate());
-				query.setString(3, employee.getSsn());
+				query.setString(1, employee.getEmployeeID());
+				query.setString(2, employee.getStartDate());
+				query.setFloat(3, employee.getHourlyRate());
+				query.setString(4, employee.getSsn());
 				query.executeUpdate();
 				
 				connection.commit();
@@ -222,14 +228,14 @@ public class EmployeeDao {
 				ResultSet results;
 				
 				// Check for existing Employee
-				query = connection.prepareStatement("SELECT Id FROM Employee WHERE Id = ?");
-				query.setInt(1, Integer.parseInt(employeeID));
+				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
+				query.setString(1, employeeID);
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
 				
 				// Delete Employee
-				query = connection.prepareStatement("DELETE FROM Employee WHERE Id = ?");
-				query.setInt(1, Integer.parseInt(employeeID));
+				query = connection.prepareStatement("DELETE FROM Employee WHERE ID = ?");
+				query.setString(1, employeeID);
 				query.executeUpdate();
 				
 				connection.commit();
@@ -268,7 +274,7 @@ public class EmployeeDao {
 			query = connection.prepareStatement("SELECT * FROM Employee");
 			results = query.executeQuery();
 			while (results.next()) {
-				Employee employee = getEmployee(String.valueOf(results.getInt("Id")));
+				Employee employee = getEmployee(results.getString("ID"));
 				if (employee != null) employees.add(employee);
 			}
 			
@@ -300,9 +306,9 @@ public class EmployeeDao {
 			
 			// Get the Employee with associated ID
 			Employee employee = new Employee();
-			employee.setId(employeeID);
-			query = connection.prepareStatement("SELECT * FROM Employee WHERE Id = ?");
-			query.setInt(1, Integer.parseInt(employeeID));
+			employee.setEmployeeID(employeeID);
+			query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
+			query.setString(1, employeeID);
 			results = query.executeQuery();
 			if (!results.next()) return null;
 			employee.setSsn(results.getString("SSN"));
@@ -314,10 +320,12 @@ public class EmployeeDao {
 			query.setString(1, employee.getSsn());
 			results = query.executeQuery();
 			if (!results.next()) return null;
+			employee.setId(results.getString("ID"));
 			employee.setLastName(results.getString("LastName"));
 			employee.setFirstName(results.getString("FirstName"));
 			employee.setAddress(results.getString("Address"));
 			employee.setTelephone(results.getString("Telephone"));
+			employee.setEmail(results.getString("Email"));
 			
 			// Get the Location with associated ZipCode
 			Location location = new Location();
@@ -395,11 +403,11 @@ public class EmployeeDao {
 			if (!results.next()) return null;
 			
 			// Get Employee with matching SSN
-			query = connection.prepareStatement("SELECT Id FROM Employee WHERE SSN = ?");
+			query = connection.prepareStatement("SELECT ID FROM Employee WHERE SSN = ?");
 			query.setString(1, results.getString("SSN"));
 			results = query.executeQuery();
 			if (!results.next()) return null;
-			String id = results.getString("Id");
+			String id = results.getString("ID");
 			
 			results.close();
 			query.close();
@@ -410,7 +418,7 @@ public class EmployeeDao {
 			exception.printStackTrace();
 		}
 
-		return "111-11-1111";
+		return null;
 	}
 
 }
