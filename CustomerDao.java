@@ -110,18 +110,31 @@ public class CustomerDao {
 			
 			// Query imported from ManagerTransactions (HW2)
 			query = connection.prepareStatement("GO "
-					+ "CREATE VIEW EmployeeEarnings AS "
-					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
-					+ "WHERE Trade.BrokerId = Employee.Id AND Trade.TransactionId = Transactions.Id "
-					+ "GROUP BY Employee.SSN");
+					+ "CREATE VIEW CustomerRevenue AS "
+					+ "SELECT SUM(Transactions.Fee) AS Total, Trade.AccountId FROM Trade, Transactions "
+					+ "WHERE Trade.TransactionId = Transactions.Id "
+					+ "GROUP BY Trade.AccountId "
+					+ "GO "
+					+ "SELECT Client.ID "
+					+ "FROM CustomerRevenue AS z, Person, Client, Account "
+					+ "WHERE Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND z.AccountId = Account.ClientID AND z.Total = ("
+					+ "SELECT MAX(x.Total) FROM CustomerRevenue AS x) "
+					+ "DROP VIEW CustomerRevenue");
+			results = query.executeQuery();
+			if (!results.next()) return null;
+			Customer customer = getCustomer(results.getString("ID"));
 			
-			// Todo: finish this
+			results.close();
+			query.close();
+			connection.close();
+			
+			return customer;
 			
 		} catch (Exception exception) {
 			exception.printStackTrace();
 		}
 		
-		return getDummyCustomer();
+		return null;
 	}
 
 	public Customer getCustomer(String customerID) {
