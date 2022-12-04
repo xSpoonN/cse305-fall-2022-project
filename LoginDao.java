@@ -1,5 +1,10 @@
 package dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 import model.Login;
 
 public class LoginDao {
@@ -7,6 +12,7 @@ public class LoginDao {
 	 * This class handles all the database operations related to login functionality
 	 */
 	
+	private String dmConn = "jdbc:mysql://localhost:3306/";
 	
 	public Login login(String username, String password, String role) {
 		/*
@@ -18,15 +24,34 @@ public class LoginDao {
 		 * Query to verify the username and password and fetch the role of the user, must be implemented
 		 */
 		
-		/*Sample data begins*/
-		Login login = new Login();
-		login.setRole(role);
-		return login;
-		/*Sample data ends*/            
-
-
-
+		if (username != null && password != null && role != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Retrieve Login entry from DB
+				query = connection.prepareStatement("SELECT Password FROM Login WHERE Username = ?");
+				query.setString(1, username);
+				results = query.executeQuery();
+				if (!results.next() || !results.getString("Password").equals(password)) return null;
+				Login login = new Login();
+				login.setUsername(username);
+				login.setPassword(password);
+				login.setRole(role);
+				
+				results.close();
+				query.close();
+				connection.close();
+				return login;
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
 		
+		return null;
 		
 	}
 	
@@ -40,9 +65,39 @@ public class LoginDao {
 		 * Return "failure" for an unsuccessful database operation
 		 */
 		
-		/*Sample data begins*/
-		return "success";
-		/*Sample data ends*/
+		if (login != null)
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(dmConn);
+				connection.setAutoCommit(false);
+				PreparedStatement query;
+				ResultSet results;
+				
+				// Check for existing user
+				query = connection.prepareStatement("SELECT Username FROM Login WHERE Username = ?");
+				query.setString(1, login.getUsername());
+				results = query.executeQuery();
+				if (results.next()) return "failure";
+				
+				// Add new user
+				query = connection.prepareStatement("INSERT INTO Login VALUES (?, ?)");
+				query.setString(1, login.getUsername());
+				query.setString(2, login.getPassword());
+				query.executeQuery();
+				
+				connection.commit();
+				results.close();
+				query.close();
+				connection.close();
+				
+				return "success";			
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+		
+		return "failure";
+		
 	}
 
 }
