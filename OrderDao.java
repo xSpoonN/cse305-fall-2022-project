@@ -89,7 +89,8 @@ public class OrderDao {
                 /* Check that the account has enough inventory */
                 ps = conn.prepareStatement("SELECT * FROM HasStock WHERE AccountId = ? AND StockSymbol = ?"); 
                 ps.setInt(1, accnum); ps.setString(2, symbol);
-                rs = ps.executeQuery(); rs.next(); int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
+                rs = ps.executeQuery(); if (!rs.next()) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
+                int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
                 if (amtowned < shares) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
                 /* Insert into Orders */
                 ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?,?,?,?,?,?);");
@@ -135,7 +136,7 @@ public class OrderDao {
             try { if (rs != null) rs.close();
             } catch (Exception ee) { System.out.println(ee.getMessage()); }
         }
-        return "fail";
+        return "failure";
     }
 
     public List<Order> getOrderByStockSymbol(String stockSymbol) {
@@ -199,7 +200,7 @@ public class OrderDao {
             ps = conn.prepareStatement(
                 "SELECT Orders.* FROM Trade,Orders,Account,Client,Person" +
                 "WHERE Person.LastName = ? AND Person.FirstName = ? AND" +
-                "Person.SSN = Client.Id AND Client.Id = Account.Client AND Account.Id = Trade.AccountId AND Trade.OrderId = Orders.Id");
+                "Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND Account.AccountNumber = Trade.AccountId AND Trade.OrderId = Orders.Id");
             ps.setString(1, customerName.split(" ")[1]); ps.setString(2, customerName.split(" ")[0]); rs = ps.executeQuery();
             while (rs.next()) {
                 int shares = rs.getInt("NumShares"); int id = rs.getInt("Id"); double price = rs.getDouble("PricePerShare");
@@ -265,25 +266,24 @@ public class OrderDao {
                 Date date = formatted.parse(rs.getString("DateTime"));
                 double percentage = rs.getDouble("Percentage");
                 String priceType = rs.getString("PriceType"); String orderType = rs.getString("OrderType");
-                Order order = new Order(); order.setDatetime(date); order.setId(id); order.setNumShares(shares);
                 switch (priceType) {
-                case "Market":
-                    MarketOrder order1 = new MarketOrder(); order1.setDatetime(date); order1.setId(id); order1.setNumShares(shares);
-                    order1.setBuySellType(orderType);
-                    out.add(order1); break;
-                case "MarketOnClose":
-                    MarketOnCloseOrder order2 = new MarketOnCloseOrder(); order2.setDatetime(date); order2.setId(id); order2.setNumShares(shares);
-                    order2.setBuySellType(orderType);
-                    out.add(order2); break;
-                case "TrailingStop":
-                    TrailingStopOrder order3 = new TrailingStopOrder(); order3.setDatetime(date); order3.setId(id); order3.setNumShares(shares);
-                    order3.setPercentage(percentage);
-                    out.add(order3); break;
-                case "HiddenStop":
-                    HiddenStopOrder order4 = new HiddenStopOrder(); order4.setDatetime(date); order4.setId(id); order4.setNumShares(shares);
-                    order4.setPricePerShare(price);
-                    out.add(order4); break;
-            }
+                    case "Market":
+                        MarketOrder order1 = new MarketOrder(); order1.setDatetime(date); order1.setId(id); order1.setNumShares(shares);
+                        order1.setBuySellType(orderType);
+                        out.add(order1); break;
+                    case "MarketOnClose":
+                        MarketOnCloseOrder order2 = new MarketOnCloseOrder(); order2.setDatetime(date); order2.setId(id); order2.setNumShares(shares);
+                        order2.setBuySellType(orderType);
+                        out.add(order2); break;
+                    case "TrailingStop":
+                        TrailingStopOrder order3 = new TrailingStopOrder(); order3.setDatetime(date); order3.setId(id); order3.setNumShares(shares);
+                        order3.setPercentage(percentage);
+                        out.add(order3); break;
+                    case "HiddenStop":
+                        HiddenStopOrder order4 = new HiddenStopOrder(); order4.setDatetime(date); order4.setId(id); order4.setNumShares(shares);
+                        order4.setPricePerShare(price);
+                        out.add(order4); break;
+                }
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -316,7 +316,7 @@ public class OrderDao {
             ps.setInt(1, Integer.parseInt(orderId)); rs = ps.executeQuery();
             while (rs.next()) {
                 OrderPriceEntry order = new OrderPriceEntry(); 
-                order.setDate(formatted.parse(rs.getString("DateTime"))); order.setOrderId(orderId); 
+                order.setDate(formatted.parse(rs.getString("Tr.DateTime"))); order.setOrderId(orderId); 
                 order.setPricePerShare(rs.getDouble("PricePerShare")); order.setStockSymbol(rs.getString("StockSymbol"));
                 orderPriceHistory.add(order);
             }

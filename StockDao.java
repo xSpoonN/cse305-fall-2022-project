@@ -273,21 +273,20 @@ public class StockDao {
 						"GROUP BY Stock.Type; ");
             ps.setString(1, customerID); ps.execute(); ps.close();
             ps = conn.prepareStatement(
-                    "SELECT CustomerStockTypes.Type INTO @TopStock FROM CustomerStockTypes " +
-                    "    WHERE CustomerStockTypes.NumOrders = ( " +
-                    "        SELECT MAX(CustomerStockTypes.NumOrders) FROM CustomerStockTypes ) LIMIT 3;");
-	        ps.execute(); ps.close();
-	        ps = conn.prepareStatement(
-	                    "SELECT * " +
-	                    "FROM Stock WHERE Stock.Type = @TopStock");
-	        rs = ps.executeQuery();
-	        while (rs.next()) {
-	            out.add(getStockBySymbol(rs.getString("StockSymbol")));
-	        }
-	        ps.close();
-	        ps = conn.prepareStatement("DROP VIEW CustomerStockTypes");
-	        ps.execute();
-	        conn.commit();
+						"SELECT CustomerStockTypes.Type INTO @TopStock FROM CustomerStockTypes " +
+						"	WHERE CustomerStockTypes.NumOrders = ( " +
+						"		SELECT MAX(CustomerStockTypes.NumOrders) FROM CustomerStockTypes ) LIMIT 3;");
+            ps.execute(); ps.close();
+            ps = conn.prepareStatement(
+						"SELECT * " +
+						"FROM Stock WHERE Stock.Type = @TopStock");
+            rs = ps.executeQuery(); ps.close();
+            while (rs.next()) {
+                out.add(getStockBySymbol(rs.getString("StockSymbol")));
+            }
+            ps = conn.prepareStatement("DROP VIEW CustomerStockTypes");
+            ps.execute();
+            conn.commit();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             try { if (conn != null) conn.rollback();
