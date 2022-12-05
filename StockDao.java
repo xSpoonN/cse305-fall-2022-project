@@ -280,10 +280,11 @@ public class StockDao {
             ps = conn.prepareStatement(
 						"SELECT * " +
 						"FROM Stock WHERE Stock.Type = @TopStock");
-            rs = ps.executeQuery(); ps.close();
+            rs = ps.executeQuery();
             while (rs.next()) {
                 out.add(getStockBySymbol(rs.getString("StockSymbol")));
             }
+            ps.close();
             ps = conn.prepareStatement("DROP VIEW CustomerStockTypes");
             ps.execute();
             conn.commit();
