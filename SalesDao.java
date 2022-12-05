@@ -17,8 +17,8 @@ public class SalesDao {
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
-                "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares FROM Transaction T, Trade, Orders " +
-                "WHERE MONTH(T.DateTime) = ? AND YEAR(T.DateTime) = ? AND Trade.Id = Orders.Id AND Trade.TransactionId = T.Id");
+                "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares FROM Transactions T, Trade, Orders " +
+                "WHERE MONTH(T.DateTime) = ? AND YEAR(T.DateTime) = ? AND Trade.OrderId = Orders.Id AND Trade.TransactionId = T.Id");
             ps.setInt(1,Integer.parseInt(month)); ps.setInt(2,Integer.parseInt(year)); rs = ps.executeQuery();
             while (rs.next()) {
                 RevenueItem ri = new RevenueItem();
@@ -61,8 +61,8 @@ public class SalesDao {
             ps.close(); rs.close();
             if (symcheck != null) {
                 ps = conn.prepareStatement(
-                    "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares FROM Transaction T, Trade, Orders " +
-                    "WHERE Trade.StockId = ? AND Trade.Id = Orders.Id AND Trade.TransactionId = T.Id");
+                    "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares FROM Transactions T, Trade, Orders " +
+                    "WHERE Trade.StockId = ? AND Trade.OrderId = Orders.Id AND Trade.TransactionId = T.Id");
                 ps.setString(1,searchKeyword); rs = ps.executeQuery();
                 while (rs.next()) {
                     RevenueItem ri = new RevenueItem();
@@ -82,8 +82,8 @@ public class SalesDao {
             if (typecheck != null) {
                 ps = conn.prepareStatement(
                     "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares " +
-                    "FROM Transaction T, Trade, Orders, Stock " +
-                    "WHERE Stock.Type = ? AND Trade.Id = Orders.Id AND Trade.TransactionId = T.Id AND Stock.StockSymbol = Trade.StockId");
+                    "FROM Transactions T, Trade, Orders, Stock " +
+                    "WHERE Stock.Type = ? AND Trade.OrderId = Orders.Id AND Trade.TransactionId = T.Id AND Stock.StockSymbol = Trade.StockId");
                 ps.setString(1,searchKeyword); rs = ps.executeQuery();
                 while (rs.next()) {
                     RevenueItem ri = new RevenueItem();
@@ -103,9 +103,9 @@ public class SalesDao {
             if (namecheck != null) {
                 ps = conn.prepareStatement(
                     "SELECT T.DateTime, T.PricePerShare, Trade.AccountId, Trade.StockId, Orders.NumShares " +
-                    "FROM Transaction T, Trade, Orders, Account, Client, Person " +
+                    "FROM Transactions T, Trade, Orders, Account, Client, Person " +
                     "WHERE Person.FirstName = ? AND Person.LastName = ? AND Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND " +
-                    "Account.AccountNumber = Trade.AccountId AND Trade.Id = Orders.Id AND Trade.TransactionId = T.Id AND Stock.StockSymbol = Trade.StockId");
+                    "Account.AccountNumber = Trade.AccountId AND Trade.OrderId = Orders.Id AND Trade.TransactionId = T.Id AND Stock.StockSymbol = Trade.StockId");
                 ps.setString(1,searchKeyword.split(" ")[0]); ps.setString(2,searchKeyword.split(" ")[1]); rs = ps.executeQuery();
                 while (rs.next()) {
                     RevenueItem ri = new RevenueItem();
