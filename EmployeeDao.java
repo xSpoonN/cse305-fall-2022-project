@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,27 +61,29 @@ public class EmployeeDao {
 		 * The sample code returns "success" by default.
 		 * You need to handle the database insertion of the employee details and return "success" or "failure" based on result of the database insertion.
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (employee != null)
 			try {
 				System.out.println(String.format("ID: %s, SSN: %s, EmployeeID: %s", employee.getId(), employee.getSsn(), employee.getEmployeeID()));
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing Person
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing Employee
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing location, add if not exists.
 				query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
@@ -93,6 +96,8 @@ public class EmployeeDao {
 					query.setString(3, employee.getLocation().getState());
 					query.executeUpdate();
 				}
+				query.close();
+				results.close();
 				
 				// Add Person
 				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone, Email) "
@@ -106,6 +111,7 @@ public class EmployeeDao {
 				query.setString(7, employee.getTelephone());
 				query.setString(8, employee.getEmail());
 				query.executeUpdate();
+				query.close();
 				
 				// Add Employee
 				query = connection.prepareStatement("INSERT INTO Employee(ID, SSN, StartDate, HourlyRate) VALUES (?, ?, ?, ?)");
@@ -116,14 +122,22 @@ public class EmployeeDao {
 				query.executeUpdate();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
 				return "success";
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 		
 		return "failure";
 
@@ -137,26 +151,28 @@ public class EmployeeDao {
 		 * The sample code returns "success" by default.
 		 * You need to handle the database update and return "success" or "failure" based on result of the database update.
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (employee != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing Person
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing Employee
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing location, add if not exists.
 				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
@@ -169,6 +185,8 @@ public class EmployeeDao {
 					query.setString(3, employee.getLocation().getState());
 					query.executeUpdate();
 				}
+				query.close();
+				results.close();
 				
 				// Update Person entry
 				query = connection.prepareStatement("UPDATE Person "
@@ -183,6 +201,7 @@ public class EmployeeDao {
 				query.setString(7, employee.getSsn());
 				query.setString(8, employee.getEmail());
 				query.executeUpdate();
+				query.close();
 				
 				// Update Employee entry
 				query = connection.prepareStatement("UPDATE Employee "
@@ -193,16 +212,25 @@ public class EmployeeDao {
 				query.setFloat(3, employee.getHourlyRate());
 				query.setString(4, employee.getSsn());
 				query.executeUpdate();
+				query.close();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
 				return "success";
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 			
 			return "failure";
 
@@ -214,35 +242,44 @@ public class EmployeeDao {
 		 * The sample code returns "success" by default.
 		 * You need to handle the database deletion and return "success" or "failure" based on result of the database deletion.
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (employeeID != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing Employee
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Delete Employee
 				query = connection.prepareStatement("DELETE FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
 				query.executeUpdate();
+				query.close();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
 				return "success";
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 		
 		return "failure";
 
@@ -258,13 +295,11 @@ public class EmployeeDao {
 		 */
 
 		List<Employee> employees = new ArrayList<Employee>();
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
-			PreparedStatement query;
-			ResultSet results;
 			
 			// Loop through all Employees and add them to the List
 			query = connection.prepareStatement("SELECT * FROM Employee");
@@ -273,14 +308,24 @@ public class EmployeeDao {
 				Employee employee = getEmployee(results.getString("ID"));
 				if (employee != null) employees.add(employee);
 			}
-			
 			results.close();
 			query.close();
+			
 			connection.close();
 			
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
+		} catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (connection != null) connection.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (connection != null) connection.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (query != null) query.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (results != null) results.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
 		
 		return employees;
 	}
@@ -292,14 +337,12 @@ public class EmployeeDao {
 		 * employeeID, which is the Employee's ID who's details have to be fetched, is given as method parameter
 		 * The record is required to be encapsulated as a "Employee" class object
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (employeeID != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Get the Employee with associated ID
 				Employee employee = new Employee();
@@ -311,6 +354,8 @@ public class EmployeeDao {
 				employee.setSsn(results.getString("SSN"));
 				employee.setStartDate(results.getString("StartDate"));
 				employee.setHourlyRate(results.getFloat("HourlyRate"));
+				query.close();
+				results.close();
 				
 				// Get the Person with associated SSN
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
@@ -323,6 +368,8 @@ public class EmployeeDao {
 				employee.setAddress(results.getString("Address"));
 				employee.setTelephone(results.getString("Telephone"));
 				employee.setEmail(results.getString("Email"));
+				query.close();
+				results.close();
 				
 				// Get the Location with associated ZipCode
 				Location location = new Location();
@@ -335,16 +382,25 @@ public class EmployeeDao {
 					location.setState(results.getString("State"));
 				}
 				employee.setLocation(location);
-				
-				results.close();
 				query.close();
-				connection.close();
+				results.close();
 				
+				connection.close();
 				return employee;
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 
 		return null;
 	}
@@ -355,15 +411,12 @@ public class EmployeeDao {
 		 * The students code to fetch employee data who generated the highest revenue will be written here
 		 * The record is required to be encapsulated as a "Employee" class object
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
-			PreparedStatement query;
-			ResultSet results;
 			
-			// Query imported from ManagerTransactions (HW2)
 			query = connection.prepareStatement(""
 					+ "CREATE VIEW EmployeeEarnings AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
@@ -378,16 +431,25 @@ public class EmployeeDao {
 			results = query.executeQuery();
 			if (!results.next()) return null;
 			Employee employee = getEmployee(results.getString("ID"));
-			
 			results.close();
 			query.close();
-			connection.close();
 			
+			connection.close();
 			return employee;
 			
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
+		} catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (connection != null) connection.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (connection != null) connection.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (query != null) query.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (results != null) results.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
 		
 		return null;
 	}
@@ -398,19 +460,19 @@ public class EmployeeDao {
 		 * username, which is the Employee's email address who's Employee ID has to be fetched, is given as method parameter
 		 * The Employee ID is required to be returned as a String
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
-			PreparedStatement query;
-			ResultSet results;
 			
 			// Get Person with matching Email
 			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
 			query.setString(1, username);
 			results = query.executeQuery();
 			if (!results.next()) return null;
+			query.close();
+			results.close();
 			
 			// Get Employee with matching SSN
 			query = connection.prepareStatement("SELECT ID FROM Employee WHERE SSN = ?");
@@ -418,15 +480,25 @@ public class EmployeeDao {
 			results = query.executeQuery();
 			if (!results.next()) return null;
 			String id = results.getString("ID");
-			
 			results.close();
 			query.close();
+			
 			connection.close();
 			return id;
 			
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
+		} catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (connection != null) connection.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (connection != null) connection.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (query != null) query.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (results != null) results.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
 
 		return null;
 	}

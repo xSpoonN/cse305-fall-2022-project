@@ -59,33 +59,41 @@ public class CustomerDao {
 		 */
 		
     	List<Customer> customers = new ArrayList<Customer>();
-		
-			try {
-				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
-				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
-				
-				// Loop through all Clients and add them to the List
-				query = connection.prepareStatement("SELECT * FROM Client");
-				results = query.executeQuery();
-				while (results.next()) {
-					System.out.println("found guy");
-					Customer customer = getCustomer(results.getString("SSN"));
-					if (customer != null && 
-							(searchKeyword == null || (customer.getFirstName() + " " + customer.getLastName()).equals(searchKeyword) || customer.getLastName().contains(searchKeyword) || customer.getFirstName().contains(searchKeyword))) 
-						customers.add(customer);
-					else System.out.println(customer == null);
-				}
-				
-				results.close();
-				query.close();
-				connection.close();
-				
-			} catch (Exception exception) {
-				exception.printStackTrace();
+    	Connection connection = null; PreparedStatement query = null; ResultSet results = null;
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+			connection.setAutoCommit(false);
+			
+			// Loop through all Clients and add them to the List
+			query = connection.prepareStatement("SELECT * FROM Client");
+			results = query.executeQuery();
+			while (results.next()) {
+				System.out.println("found guy");
+				Customer customer = getCustomer(results.getString("SSN"));
+				if (customer != null && 
+						(searchKeyword == null || (customer.getFirstName() + " " + customer.getLastName()).equals(searchKeyword) || customer.getLastName().contains(searchKeyword) || customer.getFirstName().contains(searchKeyword))) 
+					customers.add(customer);
+				else System.out.println(customer == null);
 			}
+			results.close();
+			query.close();
+			
+			connection.close();
+			
+		} catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (connection != null) connection.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (connection != null) connection.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (query != null) query.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (results != null) results.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
 			
 		return customers;
 	}
@@ -97,15 +105,12 @@ public class CustomerDao {
 		 * The students code to fetch data from the database will be written here
 		 * The customer record is required to be encapsulated as a "Customer" class object
 		 */
-
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
-			PreparedStatement query;
-			ResultSet results;
 			
-			// Query imported from ManagerTransactions (HW2)
 			query = connection.prepareStatement(""
 					+ "CREATE VIEW CustomerRevenue AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Trade.AccountId FROM Trade, Transactions "
@@ -120,16 +125,25 @@ public class CustomerDao {
 			results = query.executeQuery();
 			if (!results.next()) return null;
 			Customer customer = getCustomer(results.getString("ID"));
-			
 			results.close();
 			query.close();
-			connection.close();
 			
+			connection.close();
 			return customer;
 			
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
+		} catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (connection != null) connection.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (connection != null) connection.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (query != null) query.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (results != null) results.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
 		
 		return null;
 	}
@@ -142,14 +156,12 @@ public class CustomerDao {
 		 * The students code to fetch data from the database will be written here
 		 * The customer record is required to be encapsulated as a "Customer" class object
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (customerID != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Get the Client with associated ID
 				Customer customer = new Customer();
@@ -161,6 +173,8 @@ public class CustomerDao {
 				customer.setSsn(results.getString("SSN"));
 				customer.setRating(results.getInt("Rating"));
 				customer.setCreditCard(results.getString("CreditCardNumber"));
+				query.close();
+				results.close();
 				
 				// Get the Account with associated ClientID
 				query = connection.prepareStatement("SELECT * FROM Account WHERE ClientID = ?");
@@ -169,6 +183,8 @@ public class CustomerDao {
 				if (!results.next()) return null;
 				customer.setAccountNumber(results.getInt("AccountNumber"));
 				customer.setAccountCreationTime("DateOpened");
+				query.close();
+				results.close();
 				
 				// Get the Person with associated SSN
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
@@ -181,6 +197,8 @@ public class CustomerDao {
 				customer.setAddress(results.getString("Address"));
 				customer.setTelephone(results.getString("Telephone"));
 				customer.setEmail(results.getString("Email"));
+				query.close();
+				results.close();
 				
 				// Get the Location with associated ZipCode
 				Location location = new Location();
@@ -193,16 +211,25 @@ public class CustomerDao {
 					location.setState(results.getString("State"));
 				}
 				customer.setLocation(location);
-				
 				results.close();
 				query.close();
-				connection.close();
 				
+				connection.close();
 				return customer;
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 
 		return null;
 	}
@@ -214,35 +241,44 @@ public class CustomerDao {
 		 * The students code to delete the data from the database will be written here
 		 * customerID, which is the Customer's ID who's details have to be deleted, is given as method parameter
 		 */
-
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (customerID != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing Client
 				query = connection.prepareStatement("SELECT ID FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Delete Client
 				query = connection.prepareStatement("DELETE FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				query.executeUpdate();
+				query.close();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
 				return "success";
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 		
 		return "failure";
 		
@@ -256,19 +292,19 @@ public class CustomerDao {
 		 * username, which is the email address of the customer, who's ID has to be returned, is given as method parameter
 		 * The Customer's ID is required to be returned as a String
 		 */
-
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
-			PreparedStatement query;
-			ResultSet results;
 			
 			// Get Person with matching Email
 			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
 			query.setString(1, email);
 			results = query.executeQuery();
 			if (!results.next()) return null;
+			query.close();
+			results.close();
 			
 			// Get Client with matching SSN
 			query = connection.prepareStatement("SELECT ID FROM Client WHERE SSN = ?");
@@ -276,15 +312,25 @@ public class CustomerDao {
 			results = query.executeQuery();
 			if (!results.next()) return null;
 			String id = results.getString("ID");
-			
-			results.close();
 			query.close();
+			results.close();
+			
 			connection.close();
 			return id;
 			
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
+		} catch (SQLException e) {
+            System.out.println(e.getMessage());
+            try { if (connection != null) connection.rollback();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        } catch (Exception e) { System.out.println(e.getMessage());
+        } finally { // Close all open objects
+            try { if (connection != null) connection.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (query != null) query.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+            try { if (results != null) results.close();
+            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+        }
 
 		return null;
 	}
@@ -299,14 +345,13 @@ public class CustomerDao {
 		 * The sample code returns "success" by default.
 		 * You need to handle the database insertion of the customer details and return "success" or "failure" based on result of the database insertion.
 		 */
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (customer != null)
 			try {
 				System.out.println(String.format("ID: %s, SSN: %s, CustomerID: %s", customer.getId(), customer.getSsn(), customer.getClientId()));
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing Person
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
@@ -316,6 +361,8 @@ public class CustomerDao {
 					System.out.println("daodaodaodaodaodaodao");
 					return "failure";
 				}
+				query.close();
+				results.close();
 				
 				// Check for existing Customer
 				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
@@ -325,6 +372,8 @@ public class CustomerDao {
 					System.out.println("i crave death");
 					return "failure";
 				}
+				query.close();
+				results.close();
 				
 				// Check for existing Account
 				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
@@ -334,6 +383,8 @@ public class CustomerDao {
 					System.out.println("Scott Smolka");
 					return "failure";
 				}
+				query.close();
+				results.close();
 				
 				// Check for existing location, add if not exists.
 				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
@@ -346,6 +397,8 @@ public class CustomerDao {
 					query.setString(3, customer.getLocation().getState());
 					query.executeUpdate();
 				}
+				query.close();
+				results.close();
 				
 				// Add Person
 				query = connection.prepareStatement("INSERT INTO Person(ID, SSN, LastName, FirstName, Address, ZipCode, Telephone, Email) "
@@ -359,6 +412,7 @@ public class CustomerDao {
 				query.setString(7, customer.getTelephone());
 				query.setString(8, customer.getEmail());
 				query.executeUpdate();
+				query.close();
 				
 				// Add Client
 				query = connection.prepareStatement("INSERT INTO Client(ID, SSN, Rating, CreditCardNumber) VALUES (?, ?, ?, ?)");
@@ -367,6 +421,7 @@ public class CustomerDao {
 				query.setInt(3, customer.getRating());
 				query.setString(4, customer.getCreditCard());
 				query.executeUpdate();
+				query.close();
 				
 				// Add Account
 				query = connection.prepareStatement("INSERT INTO Account(AccountNumber, ClientID, DateOpened) VALUES (?, ?, ?)");
@@ -374,16 +429,25 @@ public class CustomerDao {
 				query.setString(2, customer.getSsn());
 				query.setString(3, customer.getAccountCreationTime());
 				query.executeUpdate();
+				query.close();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
 				return "success";
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 		
 		System.out.println("no.");
 		return "failure";
@@ -397,32 +461,36 @@ public class CustomerDao {
 		 * The sample code returns "success" by default.
 		 * You need to handle the database update and return "success" or "failure" based on result of the database update.
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (customer != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
+				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing Person
 				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing Customer
 				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing Account
 				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
 				query.setInt(1, customer.getAccountNumber());
 				results = query.executeQuery();
 				if (!results.next()) return "failure";
+				query.close();
+				results.close();
 				
 				// Check for existing location, add if not exists.
 				query = connection.prepareStatement("SELECT ZipCode FROM Location WHERE ZipCode = ?");
@@ -435,6 +503,8 @@ public class CustomerDao {
 					query.setString(3, customer.getLocation().getState());
 					query.executeUpdate();
 				}
+				query.close();
+				results.close();
 				
 				// Update Person entry
 				query = connection.prepareStatement("UPDATE Person "
@@ -449,6 +519,7 @@ public class CustomerDao {
 				query.setString(7, customer.getSsn());
 				query.setString(8, customer.getEmail());
 				query.executeUpdate();
+				query.close();
 				
 				// Update Employee entry
 				query = connection.prepareStatement("UPDATE Client "
@@ -459,6 +530,7 @@ public class CustomerDao {
 				query.setString(3, customer.getCreditCard());
 				query.setString(4, customer.getSsn());
 				query.executeUpdate();
+				query.close();
 				
 				// Update Account entry
 				query = connection.prepareStatement("UPDATE Account "
@@ -467,18 +539,27 @@ public class CustomerDao {
 				query.setInt(1, customer.getAccountNumber());
 				query.setString(2, customer.getAccountCreationTime());
 				query.setString(3, customer.getSsn());
+				query.close();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
 				return "success";
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 			
-			return "failure";
+		return "failure";
 
 	}
 
