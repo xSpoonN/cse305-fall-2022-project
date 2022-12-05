@@ -3,5 +3,5 @@ Fall 2022 Final Project for CSE 305.01:
 The Stock Effect
 
 Members:
-James Leonardi,
-Kevin Tao
+James Leonardi (113332225),
+Kevin Tao (170154879)
