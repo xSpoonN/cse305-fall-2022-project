@@ -170,7 +170,7 @@ public class StockDao {
 				"SELECT StockId, COUNT(StockId) AS NumOrders FROM Trade, Account, Client " +
 				"WHERE Trade.AccountId = Account.AccountNumber AND Account.ClientID = Client.ID AND Client.ID = ? " +
 				"GROUP BY StockId ORDER BY NumOrders DESC LIMIT 5");
-			ps.setInt(1, Integer.parseInt(customerID)); rs = ps.executeQuery();
+			ps.setString(1, customerID); rs = ps.executeQuery();
             while (rs.next()) {
                 out.add(getStockBySymbol(rs.getString("StockId")));
             }
@@ -201,7 +201,7 @@ public class StockDao {
             ps = conn.prepareStatement(
 				"SELECT Stock.*, HasStock.NumShares FROM HasStock,Stock,Account " + 
 				"WHERE Account.ClientID = ? AND HasStock.AccountId = Account.AccountNumber AND HasStock.StockID = Stock.StockSymbol");
-			ps.setInt(1, Integer.parseInt(customerId)); rs = ps.executeQuery();
+			ps.setString(1, customerId); rs = ps.executeQuery();
             while (rs.next()) {
 				Stock stock = new Stock(); stock.setSymbol(rs.getString("StockSymbol"));
 				stock.setName(rs.getString("CompanyName")); stock.setNumShares(rs.getInt("NumShares"));
@@ -312,12 +312,14 @@ public class StockDao {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
-            ps = conn.prepareStatement( "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime " + 
-										"FROM Trade T, Transactions Tr WHERE T.StockId = ?");
+            ps = conn.prepareStatement( "SELECT T.StockId, S.CompanyName, S.Type, Tr.PricePerShare, Tr.DateTime " + 
+										"FROM Trade T, Transactions Tr, Stock S WHERE T.StockId = S.StockSymbol AND Tr.Id = T.TransactionId AND T.StockId = ?");
 			ps.setString(1, stockSymbol); rs = ps.executeQuery();
             while (rs.next()) {
 				Stock stock = new Stock();
 				stock.setSymbol(stockSymbol); stock.setPrice(rs.getDouble("PricePerShare"));
+                stock.setNumShares((int) rs.getDouble("PricePerShare"));
+                stock.setName(rs.getString("CompanyName")); stock.setType(rs.getString("Type"));
                 out.add(stock);
             }
             conn.commit();
