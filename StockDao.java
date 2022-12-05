@@ -313,12 +313,11 @@ public class StockDao {
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement( "SELECT T.StockId, S.CompanyName, S.Type, Tr.PricePerShare, Tr.DateTime " + 
-										"FROM Trade T, Transactions Tr, Stock S WHERE T.StockId = S.StockSymbol AND Tr.Id = T.TransactionId AND T.StockId = ?");
-			ps.setString(1, stockSymbol); rs = ps.executeQuery();
+                                        "FROM Trade T, Transactions Tr, Stock S WHERE T.StockId = S.StockSymbol AND Tr.Id = T.TransactionId AND T.StockId = ?");
+            ps.setString(1, stockSymbol); rs = ps.executeQuery();
             while (rs.next()) {
-				Stock stock = new Stock();
-				stock.setSymbol(stockSymbol); stock.setPrice(rs.getDouble("PricePerShare"));
-                stock.setNumShares((int) rs.getDouble("PricePerShare"));
+                Stock stock = new Stock();
+                stock.setSymbol(stockSymbol); stock.setPrice(rs.getDouble("PricePerShare"));
                 stock.setName(rs.getString("CompanyName")); stock.setType(rs.getString("Type"));
                 out.add(stock);
             }

@@ -73,7 +73,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (results.next()) throw new Exception();
+				if (results.next()) throw new Exception("Found existing Person with SSN " + employee.getSsn());
 				query.close();
 				results.close();
 				
@@ -81,7 +81,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (results.next()) throw new Exception();
+				if (results.next()) throw new Exception("Found existing Employee with SSN " + employee.getSsn());
 				query.close();
 				results.close();
 				
@@ -162,7 +162,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Person with SSN " + employee.getSsn());
 				query.close();
 				results.close();
 				
@@ -170,7 +170,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Employee with SSN " + employee.getSsn());
 				query.close();
 				results.close();
 				
@@ -198,8 +198,8 @@ public class EmployeeDao {
 				query.setString(4, employee.getAddress());
 				query.setInt(5, employee.getLocation().getZipCode());
 				query.setString(6, employee.getTelephone());
-				query.setString(7, employee.getSsn());
-				query.setString(8, employee.getEmail());
+				query.setString(7, employee.getEmail());
+				query.setString(8, employee.getSsn());
 				query.executeUpdate();
 				query.close();
 				
@@ -249,17 +249,38 @@ public class EmployeeDao {
 				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
+				query.setString(1, employeeID);
+				results = query.executeQuery();
+				if (!results.next()) throw new Exception("Cannot find Person with SSN " + employeeID);
+				String username = results.getString("Email");
+				query.close();
+				results.close();
+				
 				// Check for existing Employee
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Employee with ID " + employeeID);
 				query.close();
 				results.close();
 				
 				// Delete Employee
 				query = connection.prepareStatement("DELETE FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
+				query.executeUpdate();
+				query.close();
+				
+				// Delete Person
+				query = connection.prepareStatement("DELETE FROM Person WHERE SSN = ?");
+				query.setString(1, employeeID);
+				query.executeUpdate();
+				query.close();
+				
+				// Delete Login
+				query = connection.prepareStatement("DELETE FROM Login WHERE Username = ?");
+				query.setString(1, username);
 				query.executeUpdate();
 				query.close();
 				
@@ -350,7 +371,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Employee with SSN " + employee.getSsn());
 				employee.setSsn(results.getString("SSN"));
 				employee.setStartDate(results.getString("StartDate"));
 				employee.setHourlyRate(results.getFloat("HourlyRate"));
@@ -361,21 +382,22 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Person with SSN " + employee.getSsn());
 				employee.setId(results.getString("ID"));
 				employee.setLastName(results.getString("LastName"));
 				employee.setFirstName(results.getString("FirstName"));
 				employee.setAddress(results.getString("Address"));
 				employee.setTelephone(results.getString("Telephone"));
 				employee.setEmail(results.getString("Email"));
+				int zip = results.getInt("ZipCode");
 				query.close();
 				results.close();
 				
 				// Get the Location with associated ZipCode
 				Location location = new Location();
-				location.setZipCode(results.getInt("ZipCode"));
+				location.setZipCode(zip);
 				query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
-				query.setInt(1, location.getZipCode());
+				query.setInt(1, zip);
 				results = query.executeQuery();
 				if (results.next()) {
 					location.setCity(results.getString("City"));
@@ -417,22 +439,31 @@ public class EmployeeDao {
 			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			
-			query = connection.prepareStatement(""
-					+ "CREATE VIEW EmployeeEarnings AS "
+			// Create View
+			query = connection.prepareStatement("CREATE VIEW EmployeeEarnings AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Employee.SSN FROM Trade, Transactions, Employee "
-					+ "WHERE Trade.BrokerId = Employee.Id AND Trade.TransactionId = Transactions.Id "
-					+ "GROUP BY Employee.SSN;"
-					+ ""
-					+ "SELECT Employee.ID "
+					+ "WHERE Trade.BrokerId = Employee.ID AND Trade.TransactionId = Transactions.Id "
+					+ "GROUP BY Employee.SSN");
+			query.executeUpdate();
+			query.close();
+			connection.commit();
+			
+			// Select Employee
+			query = connection.prepareStatement("SELECT Employee.ID "
 					+ "FROM EmployeeEarnings AS z, Person, Employee "
 					+ "WHERE Person.SSN = Employee.SSN AND Employee.SSN = z.SSN AND z.Total = ("
-					+ "SELECT MAX(x.Total) FROM EmployeeEarnings AS x);"
-					+ "DROP VIEW EmployeeEarnings");
+					+ "SELECT MAX(x.Total) FROM EmployeeEarnings as x)");
 			results = query.executeQuery();
-			if (!results.next()) throw new Exception();
+			if (!results.next()) throw new Exception("No employees?");
 			Employee employee = getEmployee(results.getString("ID"));
 			results.close();
 			query.close();
+			
+			// Drop View
+			query = connection.prepareStatement("DROP VIEW EmployeeEarnings");
+			query.executeUpdate();
+			query.close();
+			connection.commit();
 			
 			connection.close();
 			return employee;
@@ -470,7 +501,7 @@ public class EmployeeDao {
 			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
 			query.setString(1, username);
 			results = query.executeQuery();
-			if (!results.next()) throw new Exception();
+			if (!results.next()) throw new Exception("Cannot find Person with Email " + username);
 			String ssn = results.getString("SSN");
 			query.close();
 			results.close();
@@ -479,7 +510,7 @@ public class EmployeeDao {
 			query = connection.prepareStatement("SELECT ID FROM Employee WHERE SSN = ?");
 			query.setString(1, ssn);
 			results = query.executeQuery();
-			if (!results.next()) throw new Exception();
+			if (!results.next()) throw new Exception("Cannot find Employee with SSN " + ssn);
 			String id = results.getString("ID");
 			results.close();
 			query.close();

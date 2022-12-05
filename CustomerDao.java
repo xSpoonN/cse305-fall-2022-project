@@ -69,12 +69,10 @@ public class CustomerDao {
 			query = connection.prepareStatement("SELECT * FROM Client");
 			results = query.executeQuery();
 			while (results.next()) {
-				System.out.println("found guy");
 				Customer customer = getCustomer(results.getString("SSN"));
 				if (customer != null && 
 						(searchKeyword == null || (customer.getFirstName() + " " + customer.getLastName()).equals(searchKeyword) || customer.getLastName().contains(searchKeyword) || customer.getFirstName().contains(searchKeyword))) 
 					customers.add(customer);
-				else System.out.println(customer == null);
 			}
 			results.close();
 			query.close();
@@ -111,22 +109,31 @@ public class CustomerDao {
 			connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 			connection.setAutoCommit(false);
 			
-			query = connection.prepareStatement(""
-					+ "CREATE VIEW CustomerRevenue AS "
+			// Create View
+			query = connection.prepareStatement("CREATE VIEW CustomerRevenue AS "
 					+ "SELECT SUM(Transactions.Fee) AS Total, Trade.AccountId FROM Trade, Transactions "
 					+ "WHERE Trade.TransactionId = Transactions.Id "
-					+ "GROUP BY Trade.AccountId;"
-					+ ""
-					+ "SELECT Client.ID "
+					+ "GROUP BY Trade.AccountId");
+			query.executeUpdate();
+			query.close();
+			connection.commit();
+			
+			// Select ID
+			query = connection.prepareStatement("SELECT Client.ID "
 					+ "FROM CustomerRevenue AS z, Person, Client, Account "
-					+ "WHERE Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND z.AccountId = Account.ClientID AND z.Total = ("
-					+ "SELECT MAX(x.Total) FROM CustomerRevenue AS x);"
-					+ "DROP VIEW CustomerRevenue");
+					+ "WHERE Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND z.AccountId = Account.ClientID and z.Total = ("
+					+ "SELECT MAX(x.Total) FROM CustomerRevenue AS x)");
 			results = query.executeQuery();
-			if (!results.next()) throw new Exception();
+			if (!results.next()) throw new Exception("No customers?");
 			Customer customer = getCustomer(results.getString("ID"));
 			results.close();
 			query.close();
+			
+			// Drop View
+			query = connection.prepareStatement("DROP VIEW CustomerRevenue");
+			query.executeUpdate();
+			query.close();
+			connection.commit();
 			
 			connection.close();
 			return customer;
@@ -149,7 +156,7 @@ public class CustomerDao {
 	}
 
 	public Customer getCustomer(String customerID) {
-
+		System.out.println(customerID);
 		/*
 		 * This method fetches the customer details and returns it
 		 * customerID, which is the Customer's ID who's details have to be fetched, is given as method parameter
@@ -169,7 +176,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Client with SSN " + customerID);
 				customer.setSsn(results.getString("SSN"));
 				customer.setRating(results.getInt("Rating"));
 				customer.setCreditCard(results.getString("CreditCardNumber"));
@@ -180,9 +187,9 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Account WHERE ClientID = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Account associated with SSN " + customer.getSsn());
 				customer.setAccountNumber(results.getInt("AccountNumber"));
-				customer.setAccountCreationTime("DateOpened");
+				customer.setAccountCreationTime(results.getString("DateOpened"));
 				query.close();
 				results.close();
 				
@@ -190,21 +197,22 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Person with SSN " + customer.getSsn());
 				customer.setId(results.getString("ID"));
 				customer.setLastName(results.getString("LastName"));
 				customer.setFirstName(results.getString("FirstName"));
 				customer.setAddress(results.getString("Address"));
 				customer.setTelephone(results.getString("Telephone"));
 				customer.setEmail(results.getString("Email"));
+				int zip = results.getInt("ZipCode");
 				query.close();
 				results.close();
 				
 				// Get the Location with associated ZipCode
 				Location location = new Location();
-				location.setZipCode(results.getInt("ZipCode"));
+				location.setZipCode(zip);
 				query = connection.prepareStatement("SELECT * FROM Location WHERE ZipCode = ?");
-				query.setInt(1, location.getZipCode());
+				query.setInt(1, zip);
 				results = query.executeQuery();
 				if (results.next()) {
 					location.setCity(results.getString("City"));
@@ -248,20 +256,73 @@ public class CustomerDao {
 				connection = DriverManager.getConnection(LoginDao.dmConn, LoginDao.dmUser, LoginDao.dmPass);
 				connection.setAutoCommit(false);
 				
+				// Check for existing Person
+				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
+				query.setString(1, customerID);
+				results = query.executeQuery();
+				if (!results.next()) throw new Exception("Cannot find Person with SSN " + customerID);
+				String username = results.getString("Email");
+				query.close();
+				results.close();
+				
 				// Check for existing Client
 				query = connection.prepareStatement("SELECT ID FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Client with SSN " + customerID);
 				query.close();
 				results.close();
+				
+				// Check for existing Account
+				query = connection.prepareStatement("SELECT AccountNumber FROM Account WHERE ClientID = ?");
+				query.setString(1, customerID);
+				results = query.executeQuery();
+				if (!results.next()) throw new Exception("Cannot find Account with ClientID " + customerID);
+				int num = results.getInt("AccountNumber");
+				query.close();
+				results.close();
+				
+				// Delete from HasStock
+				query = connection.prepareStatement("DELETE FROM HasStock WHERE AccountId = ?");
+				query.setInt(1, num);
+				query.executeUpdate();
+				query.close();
+				connection.commit();
+				
+				// Delete from Trade
+				query = connection.prepareStatement("DELETE FROM Trade WHERE AccountId = ?");
+				query.setInt(1, num);
+				query.executeUpdate();
+				query.close();
+				connection.commit();
+				
+				// Delete Account
+				query = connection.prepareStatement("DELETE FROM Account WHERE ClientID = ?");
+				query.setString(1, customerID);
+				query.executeUpdate();
+				query.close();
+				connection.commit();
 				
 				// Delete Client
 				query = connection.prepareStatement("DELETE FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				query.executeUpdate();
 				query.close();
+				connection.commit();
 				
+				// Delete Person
+				query = connection.prepareStatement("DELETE FROM Person WHERE SSN = ?");
+				query.setString(1, customerID);
+				query.executeUpdate();
+				query.close();
+				connection.commit();
+				
+				// Delete Login
+				query = connection.prepareStatement("DELETE FROM Login WHERE Username = ?");
+				query.setString(1, username);
+				query.executeUpdate();
+				query.close();
+								
 				connection.commit();
 				connection.close();
 				return "success";
@@ -302,7 +363,7 @@ public class CustomerDao {
 			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
 			query.setString(1, email);
 			results = query.executeQuery();
-			if (!results.next()) throw new Exception();
+			if (!results.next()) throw new Exception("Cannot find Person with Email " + email);
 			String ssn = results.getString("SSN");
 			query.close();
 			results.close();
@@ -311,7 +372,7 @@ public class CustomerDao {
 			query = connection.prepareStatement("SELECT ID FROM Client WHERE SSN = ?");
 			query.setString(1, ssn);
 			results = query.executeQuery();
-			if (!results.next()) throw new Exception();
+			if (!results.next()) throw new Exception("Cannot find Client with SSN " + ssn);
 			String id = results.getString("ID");
 			query.close();
 			results.close();
@@ -359,8 +420,7 @@ public class CustomerDao {
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
 				if (results.next()) {
-					System.out.println("daodaodaodaodaodaodao");
-					throw new Exception();
+					throw new Exception("Cannot find Person with SSN " + customer.getSsn());
 				}
 				query.close();
 				results.close();
@@ -370,8 +430,7 @@ public class CustomerDao {
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
 				if (results.next()) {
-					System.out.println("i crave death");
-					throw new Exception();
+					throw new Exception("Cannot find Client with SSN " + customer.getSsn());
 				}
 				query.close();
 				results.close();
@@ -381,8 +440,7 @@ public class CustomerDao {
 				query.setInt(1, customer.getAccountNumber());
 				results = query.executeQuery();
 				if (results.next()) {
-					System.out.println("Scott Smolka");
-					throw new Exception();
+					throw new Exception("Cannot find Account with AccountNumber " + customer.getAccountNumber());
 				}
 				query.close();
 				results.close();
@@ -450,7 +508,6 @@ public class CustomerDao {
 	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
 	        }
 		
-		System.out.println("no.");
 		return "failure";
 	}
 
@@ -473,7 +530,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Person with SSN " + customer.getSsn());
 				query.close();
 				results.close();
 				
@@ -481,7 +538,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Client with SSN " + customer.getSsn());
 				query.close();
 				results.close();
 				
@@ -489,7 +546,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
 				query.setInt(1, customer.getAccountNumber());
 				results = query.executeQuery();
-				if (!results.next()) throw new Exception();
+				if (!results.next()) throw new Exception("Cannot find Account with AccountNumber " + customer.getAccountNumber());
 				query.close();
 				results.close();
 				
@@ -517,12 +574,12 @@ public class CustomerDao {
 				query.setString(4, customer.getAddress());
 				query.setInt(5, customer.getLocation().getZipCode());
 				query.setString(6, customer.getTelephone());
-				query.setString(7, customer.getSsn());
-				query.setString(8, customer.getEmail());
+				query.setString(7, customer.getEmail());
+				query.setString(8, customer.getSsn());
 				query.executeUpdate();
 				query.close();
 				
-				// Update Employee entry
+				// Update Client entry
 				query = connection.prepareStatement("UPDATE Client "
 						+ "SET ID = ?, Rating = ?, CreditCardNumber = ? "
 						+ "WHERE SSN = ?");

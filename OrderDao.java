@@ -22,6 +22,7 @@ public class OrderDao {
             if (order instanceof MarketOrder || order instanceof MarketOnCloseOrder) {
                 String priceType, orderType;
                 /* Adds to table Order */
+                System.out.println("1");
                 ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?, ?, ?, ?, ?, ?);");
                 ps.setInt(1, shares); ps.setDouble(2,price); ps.setString(3, time); ps.setDouble(4,0.0);
                 if (order instanceof MarketOrder) { priceType = "Market"; orderType = ((MarketOrder)order).getBuySellType();
@@ -29,11 +30,13 @@ public class OrderDao {
                 ps.setString(5,priceType); ps.setString(6, orderType);
                 ps.executeUpdate(); ps.close();
                 /* Adds to table Transaction */
+                System.out.println("2");
                 ps = conn.prepareStatement("INSERT INTO Transactions(Fee,DateTime,PricePerShare) VALUES (?, ?, ?);");
                 ps.setDouble(1, fee); ps.setString(2,time); ps.setDouble(3,price);
                 ps.executeUpdate(); ps.close();
                 conn.commit();
                 /* Gets Id of just added Order and Transaction */
+                System.out.println("3");
                 ps = conn.prepareStatement("SELECT * FROM Orders WHERE DateTime = ? AND NumShares = ? AND PricePerShare = ?");
                 ps.setString(1, time); ps.setInt(2, shares); ps.setDouble(3, price);
                 rs = ps.executeQuery(); rs.next(); int orderid = rs.getInt("Id"); ps.close(); rs.close();
@@ -41,22 +44,26 @@ public class OrderDao {
                 ps.setString(1, time); ps.setDouble(2, fee); ps.setDouble(3, price);
                 rs = ps.executeQuery(); rs.next(); int transid = rs.getInt("Id"); ps.close(); rs.close();
                 /* Adds to table Trade */
+                System.out.println("4");
                 ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
                 if (employee == null) /* ps.setNull(2, java.sql.Types.INTEGER); */ ps.setString(2, " ");
                 else ps.setString(2, employee.getEmployeeID());
                 ps.executeUpdate(); ps.close();
                 /* See if the entry exists in the account */
+                System.out.println("5");
                 ps = conn.prepareStatement("SELECT * FROM HasStock WHERE StockId = ? AND AccountId = ?");
                 ps.setString(1, symbol); ps.setInt(2, accnum);
                 rs = ps.executeQuery(); boolean exist = rs.next(); 
                 ps.close(); rs.close();
                 if (exist){
                     /* Gets the number of shares in this account */
+                    System.out.println("6");
                     ps = conn.prepareStatement("SELECT * FROM HasStock WHERE StockID = ? AND AccountId = ?");
                     ps.setString(1, symbol); ps.setInt(2, accnum);
                     rs = ps.executeQuery(); rs.next(); int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
                     /* Updates the customer's inventory */
+                    System.out.println("7");
                     ps = conn.prepareStatement("UPDATE HasStock SET NumShares = ? WHERE AccountId = ? AND StockId = ?");
                     ps.setInt(2, accnum); ps.setString(3, symbol);
                     if (orderType.equals("Sell")) {
@@ -67,6 +74,7 @@ public class OrderDao {
                     }
                 } else {
                     /* Updates the customer's inventory */
+                    System.out.println("8");
                     if (orderType.equals("Sell")) { return "missinginventory";
                     } else { //Buy type
                         ps = conn.prepareStatement("INSERT INTO HasStock VALUES (?, ?, ?);");
@@ -77,12 +85,15 @@ public class OrderDao {
                 conn.commit(); ps.close(); rs.close(); conn.close();
             } else if (order instanceof TrailingStopOrder || order instanceof HiddenStopOrder) {
                 /* Check that the account has enough inventory */
-                ps = conn.prepareStatement("SELECT * FROM HasStock WHERE AccountId = ? AND StockSymbol = ?"); 
+            	System.out.println(price + " " + time + " " + shares + " " + fee);
+                System.out.println("1");
+                ps = conn.prepareStatement("SELECT * FROM HasStock WHERE AccountId = ? AND StockId = ?"); 
                 ps.setInt(1, accnum); ps.setString(2, symbol);
                 rs = ps.executeQuery(); if (!rs.next()) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
                 int amtowned = rs.getInt("NumShares"); ps.close(); rs.close();
                 if (amtowned < shares) { ps.close(); rs.close(); conn.close(); return "missinginventory"; }
                 /* Insert into Orders */
+                System.out.println("2");
                 ps = conn.prepareStatement("INSERT INTO Orders(NumShares,PricePerShare,DateTime,Percentage,PriceType,OrderType) VALUES (?,?,?,?,?,?);");
                 ps.setInt(1, shares); ps.setString(3,time); ps.setString(6, "Sell");
                 if (order instanceof TrailingStopOrder) {
@@ -90,21 +101,26 @@ public class OrderDao {
                     ps.setDouble(4, ((TrailingStopOrder)order).getPercentage()); ps.setString(5, "TrailingStop"); 
                 } else { 
                     ps.setNull(4, java.sql.Types.DECIMAL);
-                    ps.setDouble(2, ((HiddenStopOrder)order).getPricePerShare()); ps.setString(5, "HiddenStop"); 
+                    ps.setDouble(2, ((HiddenStopOrder)order).getPricePerShare()); ps.setString(5, "HiddenStop");
+                    System.out.println("ppc: " + ((HiddenStopOrder)order).getPricePerShare());
                 }
                 ps.executeUpdate(); ps.close();
                 /* Insert into Transactions */
+                System.out.println("3");
                 ps = conn.prepareStatement("INSERT INTO Transactions(Fee,DateTime,PricePerShare) VALUES (?,?,?);");
                 ps.setDouble(1,fee); ps.setString(2, time); ps.setDouble(3,price);
-                ps.executeUpdate(); ps.close();
+                ps.executeUpdate(); ps.close(); conn.commit();
                 /* Gets Id of just added Order and Transaction */
-                ps = conn.prepareStatement("SELECT * FROM Orders WHERE DateTime = ? AND NumShares = ? AND PricePerShare = ?");
-                ps.setString(1, time); ps.setInt(2, shares); ps.setDouble(3, price);
+                System.out.println("4");
+                ps = conn.prepareStatement("SELECT * FROM Orders WHERE DateTime = ? AND NumShares = ?");
+                ps.setString(1, time); ps.setInt(2, shares);
                 rs = ps.executeQuery(); rs.next(); int orderid = rs.getInt("Id"); ps.close(); rs.close();
-                ps = conn.prepareStatement("SELECT * FROM Transactions WHERE DateTime = ? AND Fee = ? AND PricePerShare = ?");
-                ps.setString(1, time); ps.setDouble(2, fee); ps.setDouble(3, price);
+                System.out.println("4.5");
+                ps = conn.prepareStatement("SELECT * FROM Transactions WHERE DateTime = ?");
+                ps.setString(1, time);
                 rs = ps.executeQuery(); rs.next(); int transid = rs.getInt("Id"); ps.close(); rs.close();
                 /* Adds to table Trade */
+                System.out.println("5");
                 ps = conn.prepareStatement("INSERT INTO Trade(AccountId,BrokerId,TransactionId,OrderId,StockId) VALUES (?,?,?,?,?);");
                 ps.setInt(1, accnum); ps.setInt(3, transid); ps.setInt(4, orderid); ps.setString(5, symbol);
                 if (employee == null) /* ps.setNull(2, java.sql.Types.INTEGER); */ ps.setString(2, " ");
@@ -191,8 +207,8 @@ public class OrderDao {
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             /* List all orders with this name */
             ps = conn.prepareStatement(
-                "SELECT Orders.* FROM Trade,Orders,Account,Client,Person" +
-                "WHERE Person.LastName = ? AND Person.FirstName = ? AND" +
+                "SELECT Orders.* FROM Trade,Orders,Account,Client,Person " +
+                "WHERE Person.LastName = ? AND Person.FirstName = ? AND " +
                 "Person.SSN = Client.SSN AND Client.ID = Account.ClientID AND Account.AccountNumber = Trade.AccountId AND Trade.OrderId = Orders.Id");
             ps.setString(1, customerName.split(" ")[1]); ps.setString(2, customerName.split(" ")[0]); rs = ps.executeQuery();
             while (rs.next()) {
@@ -303,13 +319,14 @@ public class OrderDao {
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
             ps = conn.prepareStatement(
-                "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime, Orders.* FROM Trade T, Transactions Tr, Orders " +
-                "WHERE T.OrderId = ? AND Orders.Id = T.OrderId");
+                    "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime, Orders.* FROM Trade T, Transactions Tr, Orders " +
+                    "WHERE T.OrderId = ? AND Orders.Id = T.OrderId AND T.TransactionId = Tr.Id");
             ps.setInt(1, Integer.parseInt(orderId)); rs = ps.executeQuery();
             while (rs.next()) {
                 OrderPriceEntry order = new OrderPriceEntry(); 
                 order.setDate(formatted.parse(rs.getString("Tr.DateTime"))); order.setOrderId(orderId); 
-                order.setPricePerShare(rs.getDouble("PricePerShare")); order.setStockSymbol(rs.getString("StockSymbol"));
+                order.setPricePerShare(rs.getDouble("PricePerShare")); order.setStockSymbol(rs.getString("StockId"));
+                order.setPrice(rs.getDouble("PricePerShare")*rs.getInt("NumShares"));
                 orderPriceHistory.add(order);
             }
             conn.commit();
