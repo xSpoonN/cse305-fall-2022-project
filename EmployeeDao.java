@@ -73,7 +73,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (results.next()) return "failure";
+				if (results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -81,7 +81,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (results.next()) return "failure";
+				if (results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -162,7 +162,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -170,7 +170,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -232,7 +232,7 @@ public class EmployeeDao {
 	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
 	        }
 			
-			return "failure";
+		return "failure";
 
 	}
 
@@ -253,7 +253,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -350,7 +350,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Employee WHERE ID = ?");
 				query.setString(1, employeeID);
 				results = query.executeQuery();
-				if (!results.next()) return null;
+				if (!results.next()) throw new Exception();
 				employee.setSsn(results.getString("SSN"));
 				employee.setStartDate(results.getString("StartDate"));
 				employee.setHourlyRate(results.getFloat("HourlyRate"));
@@ -361,7 +361,7 @@ public class EmployeeDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, employee.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return null;
+				if (!results.next()) throw new Exception();
 				employee.setId(results.getString("ID"));
 				employee.setLastName(results.getString("LastName"));
 				employee.setFirstName(results.getString("FirstName"));
@@ -429,7 +429,7 @@ public class EmployeeDao {
 					+ "SELECT MAX(x.Total) FROM EmployeeEarnings AS x);"
 					+ "DROP VIEW EmployeeEarnings");
 			results = query.executeQuery();
-			if (!results.next()) return null;
+			if (!results.next()) throw new Exception();
 			Employee employee = getEmployee(results.getString("ID"));
 			results.close();
 			query.close();
@@ -470,7 +470,7 @@ public class EmployeeDao {
 			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
 			query.setString(1, username);
 			results = query.executeQuery();
-			if (!results.next()) return null;
+			if (!results.next()) throw new Exception();
 			query.close();
 			results.close();
 			
@@ -478,7 +478,7 @@ public class EmployeeDao {
 			query = connection.prepareStatement("SELECT ID FROM Employee WHERE SSN = ?");
 			query.setString(1, results.getString("SSN"));
 			results = query.executeQuery();
-			if (!results.next()) return null;
+			if (!results.next()) throw new Exception();
 			String id = results.getString("ID");
 			results.close();
 			query.close();

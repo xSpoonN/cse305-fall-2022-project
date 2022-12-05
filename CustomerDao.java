@@ -123,7 +123,7 @@ public class CustomerDao {
 					+ "SELECT MAX(x.Total) FROM CustomerRevenue AS x);"
 					+ "DROP VIEW CustomerRevenue");
 			results = query.executeQuery();
-			if (!results.next()) return null;
+			if (!results.next()) throw new Exception();
 			Customer customer = getCustomer(results.getString("ID"));
 			results.close();
 			query.close();
@@ -169,7 +169,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
-				if (!results.next()) return null;
+				if (!results.next()) throw new Exception();
 				customer.setSsn(results.getString("SSN"));
 				customer.setRating(results.getInt("Rating"));
 				customer.setCreditCard(results.getString("CreditCardNumber"));
@@ -180,7 +180,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Account WHERE ClientID = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return null;
+				if (!results.next()) throw new Exception();
 				customer.setAccountNumber(results.getInt("AccountNumber"));
 				customer.setAccountCreationTime("DateOpened");
 				query.close();
@@ -190,7 +190,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Person WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return null;
+				if (!results.next()) throw new Exception();
 				customer.setId(results.getString("ID"));
 				customer.setLastName(results.getString("LastName"));
 				customer.setFirstName(results.getString("FirstName"));
@@ -252,7 +252,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT ID FROM Client WHERE ID = ?");
 				query.setString(1, customerID);
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -302,7 +302,7 @@ public class CustomerDao {
 			query = connection.prepareStatement("SELECT SSN FROM Person WHERE Email = ?");
 			query.setString(1, email);
 			results = query.executeQuery();
-			if (!results.next()) return null;
+			if (!results.next()) throw new Exception();
 			query.close();
 			results.close();
 			
@@ -310,7 +310,7 @@ public class CustomerDao {
 			query = connection.prepareStatement("SELECT ID FROM Client WHERE SSN = ?");
 			query.setString(1, results.getString("SSN"));
 			results = query.executeQuery();
-			if (!results.next()) return null;
+			if (!results.next()) throw new Exception();
 			String id = results.getString("ID");
 			query.close();
 			results.close();
@@ -359,7 +359,7 @@ public class CustomerDao {
 				results = query.executeQuery();
 				if (results.next()) {
 					System.out.println("daodaodaodaodaodaodao");
-					return "failure";
+					throw new Exception();
 				}
 				query.close();
 				results.close();
@@ -370,7 +370,7 @@ public class CustomerDao {
 				results = query.executeQuery();
 				if (results.next()) {
 					System.out.println("i crave death");
-					return "failure";
+					throw new Exception();
 				}
 				query.close();
 				results.close();
@@ -381,7 +381,7 @@ public class CustomerDao {
 				results = query.executeQuery();
 				if (results.next()) {
 					System.out.println("Scott Smolka");
-					return "failure";
+					throw new Exception();
 				}
 				query.close();
 				results.close();
@@ -472,7 +472,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT SSN FROM Person WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -480,7 +480,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Client WHERE SSN = ?");
 				query.setString(1, customer.getSsn());
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
@@ -488,7 +488,7 @@ public class CustomerDao {
 				query = connection.prepareStatement("SELECT * FROM Account WHERE AccountNumber = ?");
 				query.setInt(1, customer.getAccountNumber());
 				results = query.executeQuery();
-				if (!results.next()) return "failure";
+				if (!results.next()) throw new Exception();
 				query.close();
 				results.close();
 				
