@@ -286,7 +286,6 @@ public class CustomerDao {
 
 
 	public String getCustomerID(String email) {
-		System.out.println(email);
 		/*
 		 * This method returns the Customer's ID based on the provided email address
 		 * The students code to fetch data from the database will be written here
