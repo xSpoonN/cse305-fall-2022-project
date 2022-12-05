@@ -237,7 +237,8 @@ public class StockDao {
             while (rs.next()) {
 				Stock stock = new Stock(); 
 				stock.setName(rs.getString("CompanyName")); stock.setSymbol(rs.getString("StockSymbol"));
-				stock.setPrice(rs.getDouble("PricePerShare")); stock.setType(rs.getString("Type"));
+				stock.setPrice(rs.getDouble("PricePerShare")); stock.setType(rs.getString("Type")); Random rand = new Random();
+			    stock.setNumShares(rand.nextInt(1000000000));
                 out.add(stock);
             }
             conn.commit();
@@ -311,7 +312,7 @@ public class StockDao {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(LoginDao.dmConn,LoginDao.dmUser,LoginDao.dmPass);
             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); conn.setAutoCommit(false);
-            ps = conn.prepareStatement( "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime" + 
+            ps = conn.prepareStatement( "SELECT T.StockId, Tr.PricePerShare, Tr.DateTime " + 
 										"FROM Trade T, Transactions Tr WHERE T.StockId = ?");
 			ps.setString(1, stockSymbol); rs = ps.executeQuery();
             while (rs.next()) {
@@ -378,7 +379,8 @@ public class StockDao {
             while (rs.next()) {
 				Stock stock = new Stock();
 				stock.setSymbol(rs.getString("StockSymbol")); stock.setPrice(rs.getDouble("PricePerShare"));
-				stock.setName(rs.getString("CompanyName")); stock.setType(stockType);
+				stock.setName(rs.getString("CompanyName")); stock.setType(stockType); Random rand = new Random();
+			    stock.setNumShares(rand.nextInt(1000000000));
                 out.add(stock);
             }
             conn.commit();
