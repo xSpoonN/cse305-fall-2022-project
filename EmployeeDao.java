@@ -471,12 +471,13 @@ public class EmployeeDao {
 			query.setString(1, username);
 			results = query.executeQuery();
 			if (!results.next()) throw new Exception();
+			String ssn = results.getString("SSN");
 			query.close();
 			results.close();
 			
 			// Get Employee with matching SSN
 			query = connection.prepareStatement("SELECT ID FROM Employee WHERE SSN = ?");
-			query.setString(1, results.getString("SSN"));
+			query.setString(1, ssn);
 			results = query.executeQuery();
 			if (!results.next()) throw new Exception();
 			String id = results.getString("ID");

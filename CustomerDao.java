@@ -286,6 +286,7 @@ public class CustomerDao {
 
 
 	public String getCustomerID(String email) {
+		System.out.println(email);
 		/*
 		 * This method returns the Customer's ID based on the provided email address
 		 * The students code to fetch data from the database will be written here
@@ -303,12 +304,13 @@ public class CustomerDao {
 			query.setString(1, email);
 			results = query.executeQuery();
 			if (!results.next()) throw new Exception();
+			String ssn = results.getString("SSN");
 			query.close();
 			results.close();
 			
 			// Get Client with matching SSN
 			query = connection.prepareStatement("SELECT ID FROM Client WHERE SSN = ?");
-			query.setString(1, results.getString("SSN"));
+			query.setString(1, ssn);
 			results = query.executeQuery();
 			if (!results.next()) throw new Exception();
 			String id = results.getString("ID");
