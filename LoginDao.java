@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import model.Login;
 
@@ -25,33 +26,42 @@ public class LoginDao {
 		 * password, which is the password of the user, is given as method parameter
 		 * Query to verify the username and password and fetch the role of the user, must be implemented
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (username != null && password != null && role != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
+				connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Retrieve Login entry from DB
 				query = connection.prepareStatement("SELECT Password FROM Login WHERE Username = ?");
 				query.setString(1, username);
 				results = query.executeQuery();
-				if (!results.next() || !results.getString("Password").equals(password)) return null;
+				if (!results.next() || !results.getString("Password").equals(password)) throw new Exception();
+				results.close();
+				query.close();
+				
 				Login login = new Login();
 				login.setUsername(username);
 				login.setPassword(password);
 				login.setRole(role);
 				
-				results.close();
-				query.close();
 				connection.close();
 				return login;
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 		
 		return null;
 		
@@ -66,37 +76,45 @@ public class LoginDao {
 		 * Return "success" on successful insertion of a new user
 		 * Return "failure" for an unsuccessful database operation
 		 */
-		
+		Connection connection = null; PreparedStatement query = null; ResultSet results = null;
 		if (login != null)
 			try {
 				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
+				connection = DriverManager.getConnection(dmConn, dmUser, dmPass);
 				connection.setAutoCommit(false);
-				PreparedStatement query;
-				ResultSet results;
 				
 				// Check for existing user
 				query = connection.prepareStatement("SELECT Username FROM Login WHERE Username = ?");
 				query.setString(1, login.getUsername());
 				results = query.executeQuery();
-				if (results.next()) return "failure";
+				if (results.next()) throw new Exception();
+				query.close();
+				results.close();
 				
 				// Add new user
 				query = connection.prepareStatement("INSERT INTO Login VALUES (?, ?)");
 				query.setString(1, login.getUsername());
 				query.setString(2, login.getPassword());
 				query.executeUpdate();
+				query.close();
 				
 				connection.commit();
-				results.close();
-				query.close();
 				connection.close();
-				
 				return "success";			
 				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			}
+			} catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            try { if (connection != null) connection.rollback();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        } catch (Exception e) { System.out.println(e.getMessage());
+	        } finally { // Close all open objects
+	            try { if (connection != null) connection.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (query != null) query.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	            try { if (results != null) results.close();
+	            } catch (Exception ee) { System.out.println(ee.getMessage()); }
+	        }
 		
 		return "failure";
 		
